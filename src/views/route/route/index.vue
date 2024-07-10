@@ -121,7 +121,7 @@ export default {
           propertiesId.push(billBoardId)
         }
         if(that.pos.length===2){
-          axios.post('http://192.168.0.107:8089/map_test/way', { // 'http://127.0.0.1:8089/map_test/way'
+          axios.post('http://127.0.0.1:8089/map_test/way', { // 'http://127.0.0.1:8089/map_test/way'
             pathWay:that.pos,
             hardAreas:that.areas
           }).then(function (response) {
