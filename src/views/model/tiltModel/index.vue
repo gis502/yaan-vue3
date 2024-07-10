@@ -234,7 +234,7 @@ function selectGltfModel() {
 
     let origin = new Cesium.Cartesian3(0, 0, 1000)
     Cesium.Matrix4.multiplyByPoint(window.modelObject.modelMatrix, origin, origin)
-    window.viewer.camera.flyTo({
+    window.viewer.camera.zoomTo({
       destination: origin,
       orientation: {
         // 指向
@@ -254,7 +254,7 @@ function selectModel(modelName) {
   // window.viewer.zoomTo(
   //     window.modelObject
   // )
-  window.viewer.flyTo(window.modelObject)
+  window.viewer.zoomTo(window.modelObject)
   modelStatus = true
   modelStatusContent.value = "隐藏当前模型"
 }
@@ -465,7 +465,7 @@ function find() {
     } else if (window.modelObject instanceof Cesium.Model) {
       let origin = new Cesium.Cartesian3(0, 0, 1000)
       Cesium.Matrix4.multiplyByPoint(window.modelObject.modelMatrix, origin, origin)
-      window.viewer.camera.flyTo({
+      window.viewer.camera.zoomTo({
         destination: origin,
         orientation: {
           // 指向

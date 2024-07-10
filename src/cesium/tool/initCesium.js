@@ -25,31 +25,6 @@ export function initCesium(Cesium) {
         timeline: false, // 是否显示时间轴
         navigationHelpButton: false, // 是否显示右上角的帮助按钮
         scene3DOnly: false, // 如果设置为true，则所有几何图形以3D模式绘制以节约GPU资源
-
-
-        // 天地图影像
-        // imageryProvider: new Cesium.WebMapTileServiceImageryProvider({
-        //   url: `http://t0.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=${TianDiTuToken}`,
-        //   layer: 'tdtBasicLayer',
-        //   style: 'default',
-        //   format: 'image/jpeg',
-        //   tileMatrixSetID: 'GoogleMapsCompatible',
-        // })
-        // 本地geoserver影像
-        // imageryProvider: new Cesium.WebMapServiceImageryProvider({
-        //   url: 'http://localhost:9080/geoserver/yaan/wms',
-        //   layers: 'yaan:yaan',
-        //   parameters: {
-        //     service: 'WMS',
-        //     format: 'image/png',
-        //     transparent: true
-        //   }
-        // })
-        // terrainProvider: new Cesium.CesiumTerrainProvider({
-        //     url: "http://localhost:9080/geoserver/www/dem",
-        // }),
-
-
         //获取或设置可用于图像选择的ProviderViewModel实例数组。
         imageryProviderViewModels: getImageryProviderArr(),
         //获取或设置可用于地形选择的ProviderViewModel实例数组。
@@ -141,8 +116,7 @@ function getImageryProviderArr() {
 
 //地形
 function getTerrainProviderViewModelsArr() {
-    // 别忘了把这部分注释解开
-    // let baseURL = process.env.VUE_APP_API_URL
+    let baseURL = import.meta.env.VITE_APP_API_URL
     return [
         new Cesium.ProviderViewModel({
             //图层的名称
@@ -158,23 +132,23 @@ function getTerrainProviderViewModelsArr() {
                 })
             }
         }),
-        // new Cesium.ProviderViewModel({
-        //     //图层的名称
-        //     name: '本地DEM地形',
-        //     //显示项目被隐藏的工具提示
-        //     tooltip: 'DEM地形',
-        //     //代表图层的图标
-        //     iconUrl: CesiumWorldTerrain,
-        //     //一个函数或命令，用于创建一个或多个提供程序，这些提供程序将在选择此项目时添加到地球仪中
-        //     creationFunction: function () {
-        //         return new Cesium.CesiumTerrainProvider({
-        //             url: baseURL+'/geoserver/www/dem',
-        //             requestWaterMask: !0,
-        //             requestVertexNormals: !0,
-        //             // isSct : false //是否为iServer发布的TIN地形服务,stk地形设置为false。
-        //         })
-        //     }
-        // }),
+        new Cesium.ProviderViewModel({
+            //图层的名称
+            name: '本地DEM地形',
+            //显示项目被隐藏的工具提示
+            tooltip: 'DEM地形',
+            //代表图层的图标
+            iconUrl: CesiumWorldTerrain,
+            //一个函数或命令，用于创建一个或多个提供程序，这些提供程序将在选择此项目时添加到地球仪中
+            creationFunction: function () {
+                return new Cesium.CesiumTerrainProvider({
+                    url: baseURL+'/geoserver/www/dem',
+                    requestWaterMask: !0,
+                    requestVertexNormals: !0,
+                    // isSct : false //是否为iServer发布的TIN地形服务,stk地形设置为false。
+                })
+            }
+        }),
         new Cesium.ProviderViewModel({
             //图层的名称
             name: 'Cesium地形',
