@@ -58,6 +58,7 @@ export function initCesium(Cesium) {
     // viewer.extend(Cesium.viewerCesiumInspectorMixin);
     // viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
     viewer.scene.globe.enableLighting = false//全局光照
+    viewer.shadows = false
     viewer.camera.setView({
         // Cesium的坐标是以地心为原点，一向指向南美洲，一向指向亚洲，一向指向北极州
         // fromDegrees()方法，将经纬度和高程转换为世界坐标
