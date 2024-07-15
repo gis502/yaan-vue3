@@ -1,33 +1,66 @@
 <template>
-  <div id="cesiumContainer">
-    <el-form class="button-container">
-      <div class="modelAdj">模型选择</div>
-      <el-button class="el-button--primary" size="small" @click="selectModel(1)">0.4平方公里模型</el-button>
-      <el-button class="el-button--primary" size="small" @click="selectModel(2)">7.37平方公里模型</el-button>
-      <!--      <el-button class="el-button--primary" @click="selectModel(3)">3</el-button>-->
-      <!--      <el-button class="el-button--primary" @click="selectModel('mianyang_235GB_8km2_3dtiles/shang')">绵阳上-->
-      <!--      </el-button>-->
-      <!--      <el-button class="el-button--primary" @click="selectModel('mianyang_235GB_8km2_3dtiles/xia')">绵阳下</el-button>-->
-      <!--      <el-button class="el-button--primary" @click="selectModel('tianquan_37.6GB_4km2_3dtiles')">天全</el-button>-->
-      <!--      <el-button class="el-button--primary" @click="selectGltfModel()">gltf</el-button>-->
-      <el-button class="el-button--primary" size="small" @click="home">雅安</el-button>
-
-    </el-form>
-    <el-form class="tool-container">
+  <div id="cesiumContainer" v-if="pageStatus">
+    <el-form class="tool-container-1">
       <el-row>
         <div class="modelAdj">模型调整</div>
-        <el-button class="el-button--primary" size="small" @click="find">找到模型</el-button>
-        <el-button class="el-button--primary" size="small" @click="showArrow">{{ showArrowText }}</el-button>
+        <el-button type="primary" @click="find">找到模型</el-button>
+        <el-button type="primary" @click="showArrow">{{ showArrowText }}</el-button>
         <!--        <el-button class="el-button--primary" @click="isTerrainLoaded">地形是否加载</el-button>-->
-        <el-button class="el-button--primary" size="small" @click="hide">{{ modelStatusContent }}</el-button>
+        <el-button type="primary" @click="hide">{{ modelStatusContent }}</el-button>
+<!--        <el-button type="primary" @click="openDialog('新增')">新增模型</el-button>-->
+        <el-button type="primary" @click="updataPosition">更新位置</el-button>
       </el-row>
+    </el-form>
+    <el-form class="button-container">
+      <div class="modelAdj">模型选择</div>
+      <!--      <el-button class="el-button&#45;&#45;primary" size="small" @click="selectModel(1)">0.4平方公里模型</el-button>-->
+      <!--      <el-button class="el-button&#45;&#45;primary" size="small" @click="selectModel(2)">7.37平方公里模型</el-button>-->
+      <!--      <el-button class="el-button&#45;&#45;primary" size="small" @click="home">雅安</el-button>-->
+      <el-table :data="tableData" style="width: 100%;margin-bottom: 5px" :header-cell-style="tableHeaderColor"
+                :cell-style="tableColor" @row-click="">
+        <el-table-column prop="name" label="模型名称">
+<!--          <template #default="scope">-->
+<!--            <el-input v-if="scope.row.show" v-model="modelInfo.name" class="w-50 m-2" placeholder="Please Input"/>-->
+<!--          </template>-->
+        </el-table-column>
+        <el-table-column prop="path" label="模型路径" width="">
+<!--          <template #default="scope">-->
+<!--            <el-input v-if="scope.row.show" v-model="modelInfo.path" class="w-50 m-2" placeholder="Please Input"/>-->
+<!--          </template>-->
+        </el-table-column>
+<!--        <el-table-column prop="rz" label="旋转角度" width=""></el-table-column>-->
+        <el-table-column prop="tz" label="模型高度" width=""></el-table-column>
+<!--        <el-table-column prop="rze" label="旋转角度（三维）" width=""></el-table-column>-->
+        <el-table-column prop="tze" label="模型高度（三维）" width=""></el-table-column>
+        <el-table-column label="操作" min-width="120" align="center">
+<!--          <template #default="scope">-->
+<!--            <el-button v-if="!scope.row.show" type="text" :icon="Edit" @click="updataM(scope.row)">修改</el-button>-->
+<!--            <el-button v-if="!scope.row.show" type="text" :icon="Edit" @click="selectModel(scope.row.path)">查看</el-button>-->
+<!--            <el-button v-if="!scope.row.show" type="text" :icon="Delete" @click="deleteM(scope.row)">删除</el-button>-->
+<!--            <el-button v-if="scope.row.show" type="text" :icon="Edit" @click="updataMCommit(scope.row)">确认</el-button>-->
+<!--          </template>-->
+          <template #default="scope">
+            <el-button type="text" :icon="Edit" @click="goModel(scope.row)">查看</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :current-page="currentPage"
+          :page-size="pageSize"
+          layout="total, prev, pager, next, jumper"
+          :total="total">
+      </el-pagination>
+    </el-form>
+    <el-form class="tool-container">
       <el-row>
         <!--        <br>-->
         <span style="color: white">调整高度</span>
         <el-slider
             v-model="tz"
             show-input
-            :max="10000"
+            :max="2000"
             :min="-2000"
             :step="10"
             @change="changeHeight(tz)"
@@ -72,16 +105,42 @@
         </el-col>
       </el-row>
     </el-form>
+
+<!--    <el-dialog v-model="dialogFormVisible" title="新增模型" width="500" :show-close="false">-->
+<!--      <el-form :model="modelInfo">-->
+<!--        <el-form-item label="模型名称">-->
+<!--          <el-input v-model="modelInfo.name" autocomplete="off"/>-->
+<!--        </el-form-item>-->
+<!--        <el-form-item label="模型路径">-->
+<!--          <el-input v-model="modelInfo.path" autocomplete="off"/>-->
+<!--        </el-form-item>-->
+<!--      </el-form>-->
+<!--      <template #footer>-->
+<!--        <div class="dialog-footer">-->
+<!--          <el-button @click="closeDialog">Cancel</el-button>-->
+<!--          <el-button type="primary" @click="commitDialog">-->
+<!--            Confirm-->
+<!--          </el-button>-->
+<!--        </div>-->
+<!--      </template>-->
+<!--    </el-dialog>-->
+
   </div>
+  <!--  <div v-if="!pageStatus">-->
+  <!--    <tiltTable />-->
+  <!--  </div>-->
 </template>
 
 <script setup>
 import * as Cesium from 'cesium'
 import CesiumNavigation from "cesium-navigation-es6";
 import {initCesium} from '@/cesium/tool/initCesium.js'
-import { ElMessageBox } from 'element-plus';
-import { ElMessage } from 'element-plus';
+import {Edit, Delete} from '@element-plus/icons-vue'
+import {addModelApi, deleteModel, getAllModel, updataModel,updataModelNoElevation,updataModelElevation} from '@/api/system/model.js'
+// import tiltTable from '@/components/Model/tiltModel/tiltTable.vue'
+import { ElMessage } from 'element-plus'
 
+let pageStatus = ref(true)
 let tz = ref(0)
 let rz = ref(0)
 let originRz = 0
@@ -91,13 +150,25 @@ let showArrowValue = false
 let showArrowText = ref("显示坐标轴")
 let modelStatus = true
 let modelStatusContent = ref("隐藏当前模型")
-let modelName=''
+let modelName = ''
+//----------------------------model table---------------------------------------
+let currentPage = ref(1)
+let pageSize = ref(5)
+let total = ref(0)
+let modelList = []
+let tableData = ref([])
+//------------------------------dialog对话框--------------------------------------
+let title = ref("")
+let dialogFormVisible = ref(false)
+let modelInfo = reactive({
+  name: null, path: null, rz: null, tz: null, rze: null, tze: null, time: null, modelid: null
+})
+//-------------------------------------------------------------------------------
 
 onMounted(() => {
   init()
-  // ---------------------------------------------------
   watchTerrainProviderChanged()
-  // createMarkPhoteList()
+  initModelTable()
 })
 
 // 初始化控件等
@@ -154,7 +225,6 @@ function init() {
   }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 }
 
-// 初始化ws
 function hide() {
   if (modelStatus) {
     window.modelObject.show = false
@@ -186,32 +256,18 @@ function isTerrainLoaded() {
 
 function watchTerrainProviderChanged() {
   window.viewer.scene.terrainProviderChanged.addEventListener(terrainProvider => {
-    let popupVisible = false // 地形改变时关闭弹窗
-    let tzs = []
-    if (modelName === 1) {
-      tzs[0] = 9
-      tzs[1] = -567
-    } else {
-      tzs[0] = 15
-      tzs[1] = -557
-    }
     if (isTerrainLoaded()) {
-      changeHeight(tzs[0])
-      console.log(tz)
-      tz.value= tzs[0]
-      console.log(tz)
+      changeHeight(modelInfo.tze)
+      tz.value = modelInfo.tze
       find()
     } else {
-      console.log(tz)
-      changeHeight(tzs[1])
-      tz.value= tzs[1]
-      console.log(tz)
+      changeHeight(modelInfo.tz)
+      tz.value = modelInfo.tz
       find()
     }
   });
 }
 
-//------------------------------------------------------------------------------
 function selectGltfModel() {
   remove3dData()
   tz.value = 0
@@ -267,8 +323,8 @@ function selectModel(modelName) {
 function initModel(modelName) {
 
   let baseURL = import.meta.env.VITE_APP_API_URL
-  const tileset =new Cesium.Cesium3DTileset({
-    url:baseURL + "/geoserver/www/" + modelName + "/tileset.json",
+  const tileset = new Cesium.Cesium3DTileset({
+    url: baseURL + "/geoserver/www/" + modelName + "/tileset.json",
     loadSiblings: true,
     show: true,
     maximumScreenSpaceError: 64,//默认16，值越大经度越小
@@ -283,22 +339,20 @@ function initModel(modelName) {
   tileset.readyPromise.then(function () {
     window.viewer.scene.primitives.add(tileset);
     console.log("模型已加载")
-    let tzs
-    if (modelName === 1) {
-    tzs = 9
-  } else {
-    tzs = 15
-  }
-  if (isTerrainLoaded()) {
-    tz.value = tzs
-    changeHeight(tzs)
-  } else {
-    const cartographic = Cesium.Cartographic.fromCartesian(tileset.boundingSphere.center);//获取模型高度
-    tz.value = 20 - Math.trunc(cartographic.height)//高度取整
-    transferModel(tileset, 0, 0, tz.value, 0, 0, 0, 1, 1)//模型贴地
-    console.log(tz.value, Math.trunc(cartographic.height), 123)
-  }
-})
+    if (isTerrainLoaded()) {
+      changeHeight(modelInfo.tze)
+      tz.value = modelInfo.tze
+      find()
+    } else {
+      // tz.value = modelInfo.tz
+      // changeHeight(modelInfo.tz)
+      // find()
+      const cartographic = Cesium.Cartographic.fromCartesian(tileset.boundingSphere.center);//获取模型高度
+      tz.value = 20 - Math.trunc(cartographic.height)//高度取整
+      transferModel(tileset, 0, 0, tz.value, 0, 0, 0, 1, 1)//模型贴地
+      console.log(tz.value, Math.trunc(cartographic.height), 123)
+    }
+  })
 
 }
 
@@ -338,7 +392,7 @@ function transferModel(model, _tx, _ty, _tz, _opacity) {
   if (!checkModelLoad()) {
     return
   }
-  console.log("_opacity",_opacity)
+  console.log("_opacity", _opacity)
   let tx = _tx ? _tx : 0;
   let ty = _ty ? _ty : 0;
   let tz = _tz ? _tz : 0;
@@ -435,7 +489,6 @@ function rotationModel(tileset, rz) {
   originRz = rz
 
 }
-
 
 function remove3dData() {
   window.viewer.scene.primitives.remove(window.modelObject)
@@ -556,17 +609,240 @@ function checkModelLoad() {
   if (window.modelObject)
     return true
   else
-    // $confirm('未加载模型', '提示', {
-    //   confirmButtonText: '确定',
-    //   type: 'warning',
-    //   center: true
-    // }).then(function () {
-    //   rz = 0
-    //   originRz = 0
-    //   originTz = 0
-    //   opacity = 100
-    // })
-  return false
+      // $confirm('未加载模型', '提示', {
+      //   confirmButtonText: '确定',
+      //   type: 'warning',
+      //   center: true
+      // }).then(function () {
+      //   rz = 0
+      //   originRz = 0
+      //   originTz = 0
+      //   opacity = 100
+      // })
+    return false
+}
+
+//-----------------------模型table----------------------------
+
+// 初始化模型table数据
+function initModelTable() {
+  getAllModel().then(res => {
+    modelList = res
+    total.value = res.length
+    tableData.value = getPageArr(modelList)
+    console.log(modelList, tableData)
+  })
+}
+
+// 修改table的header的样式
+function tableHeaderColor() {
+  return {
+    'border-color': '#293038',
+    'background-color': '#293038 !important', // 此处是elemnetPlus的奇怪bug，header-cell-style中背景颜色不加!important不生效
+    'color': '#fff',
+    'padding': '0',
+    'text-align': 'center',
+  }
+}
+
+// 修改table 中每行的样式
+function tableColor({row, column, rowIndex, columnIndex}) {
+  if (rowIndex % 2 == 1) {
+    return {
+      'border-color': '#313a44',
+      'background-color': '#313a44',
+      'color': '#fff',
+      'padding': '0',
+      'text-align': 'center'
+    }
+  } else {
+    return {
+      'border-color': '#304156',
+      'background-color': '#304156',
+      'color': '#fff',
+      'padding': '0',
+      'text-align': 'center'
+    }
+  }
+}
+
+//数组切片
+function getPageArr(data) {
+  let arr = []
+  let start = (currentPage.value - 1) * pageSize.value
+  let end = currentPage.value * pageSize.value
+  if (end > total.value) {
+    end = total.value
+  }
+  for (; start < end; start++) {
+    data[start].show = false
+    arr.push(data[start])
+  }
+  return arr
+}
+
+//`每页 ${val} 条`
+function handleSizeChange(val) {
+  pageSize.value = val
+  tableData.value = getPageArr(modelList)
+  // console.log(`每页 ${val} 条`);
+}
+
+// `当前页: ${val}`
+function handleCurrentChange(val) {
+  currentPage.value = val
+  tableData.value = getPageArr(modelList)
+  // console.log(`当前页: ${val}`);
+}
+
+//-----------------------------------------------------------
+
+function goModel(row){
+  modelInfo.name = row.name
+  modelInfo.path = row.path
+  modelInfo.tz = row.tz
+  modelInfo.rz = row.rz
+  modelInfo.time = row.time
+  modelInfo.modelid = row.modelid
+  modelInfo.tze = row.tze
+  modelInfo.rze = row.rze
+  selectModel(row.path)
+}
+
+// 更新模型位置
+function updataPosition(){
+  if(isTerrainLoaded()){
+    let data = {
+      rze: rz.value,
+      tze: tz.value,
+      modelid: modelInfo.modelid
+    }
+    updataModelElevation(data).then(res=>{
+      ElMessage({
+        showClose: true,
+        message: '加载地形情况下，更新成功',
+        type: 'success',
+        duration: 2000,
+      })
+      initModelTable()
+    })
+  }else{
+    let data = {
+      rz: rz.value,
+      tz: tz.value,
+      modelid: modelInfo.modelid
+    }
+    updataModelNoElevation(data).then(res=>{
+      ElMessage({
+        showClose: true,
+        message: '不加载地形情况下，更新成功',
+        type: 'success',
+        duration: 2000,
+      })
+      initModelTable()
+    })
+  }
+}
+
+// 打开对话框
+function openDialog(titleM, row) {
+  if (titleM === "新增") {
+    title.value = "新增"
+    modelInfo.rz = 0
+    modelInfo.tz = 0
+    modelInfo.time = '1717743010164'
+    modelInfo.modelid = Date.now()
+  } else {
+    modelInfo.rz = 0
+    modelInfo.tz = 0
+    modelInfo.time = '1717743010164'
+    modelInfo.modelid = row.modelid
+    modelInfo.name = row.name
+    modelInfo.path = row.path
+    title.value = "编辑"
+  }
+  dialogFormVisible.value = true
+
+}
+
+// 关闭对话框
+function closeDialog() {
+  for (let key in modelInfo) {
+    modelInfo[key] = null
+  }
+  dialogFormVisible.value = false
+}
+
+// 确认提交对话框，添加模型
+function commitDialog() {
+  let data = {
+    name: modelInfo.name,
+    path: modelInfo.path,
+    rz: modelInfo.rz,
+    tz: modelInfo.tz,
+    rze: modelInfo.rze,
+    tze: modelInfo.tze,
+    time: modelInfo.time,
+    modelid: modelInfo.modelid
+  }
+  if (title.value === "新增") {
+    addModelApi(data).then(res => {
+      initModelTable()
+      for (let key in modelInfo) {
+        modelInfo[key] = null
+      }
+    })
+  }
+  // else{
+  //   updataModel(data).then(res=>{
+  //     initModelTable()
+  //     for(let key in modelInfo){
+  //       modelInfo[key] = null
+  //     }
+  //     console.log(res,'编辑')
+  //   })
+  // }
+  dialogFormVisible.value = false
+}
+
+// 删除模型
+function deleteM(row) {
+  deleteModel({modelid: row.modelid}).then(res => {
+    initModelTable()
+  })
+}
+
+// 修改模型
+function updataM(row) {
+  modelInfo.name = row.name
+  modelInfo.path = row.path
+  modelInfo.tz = row.tz
+  modelInfo.rz = row.rz
+  modelInfo.time = row.time
+  modelInfo.modelid = row.modelid
+  modelInfo.tze = row.tze
+  modelInfo.rze = row.rze
+  // row.show = !row.show
+}
+
+function updataMCommit() {
+  let data = {
+    name: modelInfo.name,
+    path: modelInfo.path,
+    rz: modelInfo.rz,
+    tz: modelInfo.tz,
+    rze: modelInfo.rze,
+    tze: modelInfo.tze,
+    time: modelInfo.time,
+    modelid: modelInfo.modelid
+  }
+  updataModel(data).then(res => {
+    initModelTable()
+    for (let key in modelInfo) {
+      modelInfo[key] = null
+    }
+    console.log(res, '编辑')
+  })
 }
 </script>
 
@@ -634,23 +910,35 @@ function checkModelLoad() {
   background-color: rgba(40, 40, 40, 0.7);
 }
 
+.tool-container-1 {
+  position: absolute;
+  padding: 10px;
+  border-radius: 5px;
+  width: 525px;
+  top: 10px;
+  left: 10px;
+  z-index: 10; /* 更高的层级 */
+  background-color: rgba(40, 40, 40, 0.7);
+}
+
 .tool-container {
   position: absolute;
   padding: 10px;
   border-radius: 5px;
-  width: 500px;
-  top: 90px;
+  width: 525px;
+  top: 400px;
   left: 10px;
   z-index: 10; /* 更高的层级 */
   background-color: rgba(40, 40, 40, 0.7);
 }
 
 .button-container {
-  width: 500px;
+  height: 330px;
+  width: 525px;
   position: absolute;
   padding: 10px;
   border-radius: 5px;
-  top: 10px;
+  top: 65px;
   left: 10px;
   z-index: 10; /* 更高的层级 */
   background-color: rgba(40, 40, 40, 0.7);
@@ -671,5 +959,6 @@ function checkModelLoad() {
 .modelAdj {
   color: white;
   margin-bottom: 5px;
+  margin-right: 10px;
 }
 </style>
