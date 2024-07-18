@@ -25,8 +25,20 @@ export function initCesium(Cesium) {
         timeline: false, // 是否显示时间轴
         navigationHelpButton: false, // 是否显示右上角的帮助按钮
         scene3DOnly: false, // 如果设置为true，则所有几何图形以3D模式绘制以节约GPU资源
-
-
+        //截图和渲染相关的一些配置
+        contextOptions: {
+            webgl: {
+              alpha: true,
+              depth: false,
+              stencil: true,
+              antialias: true,
+              premultipliedAlpha: true,
+                //cesium状态下允许canvas转图片convertToImage
+              preserveDrawingBuffer: true,
+              failIfMajorPerformanceCaveat: true
+            },
+            allowTextureFilterAnisotropic: true
+        },
         // 天地图影像
         // imageryProvider: new Cesium.WebMapTileServiceImageryProvider({
         //   url: `http://t0.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=${TianDiTuToken}`,
@@ -74,6 +86,69 @@ export function initCesium(Cesium) {
 }
 
 //图层
+// function getImageryProviderArr() {
+//     return [
+//         new Cesium.ProviderViewModel({
+//             //图层的名称。
+//             name: '天地图',
+//             //显示项目被隐藏的工具提示
+//             tooltip: '天地图',
+//             //代表图层的图标
+//             iconUrl: bingAerial,
+//             //一个函数或命令，用于创建一个或多个提供程序，这些提供程序将在选择此项目时添加到地球仪中。
+//             creationFunction: function () {
+//                 return new Cesium.WebMapTileServiceImageryProvider({
+//                     url: `/tdtproxy/img_c/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=c&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=${TianDiTuToken}`,
+//                     format: 'tiles',
+//                     tileMatrixSetID: 'c',
+//                     tilingScheme: new Cesium.GeographicTilingScheme(),
+//                     tileMatrixLabels: ['1', '2', '3', '4',
+//                         '5', '6', '7', '8', '9', '10', '11',
+//                         '12', '13', '14', '15', '16', '17', '18'],
+//                     layer: "tdtImgAnnoLayer",
+//                     style: "default",
+//                     show: false
+//                 })
+//             }
+//         }),
+//         new Cesium.ProviderViewModel({
+//             //图层的名称。
+//             name: 'Bing底图',
+//             //显示项目被隐藏的工具提示
+//             tooltip: '默认Bing底图',
+//             //代表图层的图标
+//             iconUrl: bingAerial,
+//             //一个函数或命令，用于创建一个或多个提供程序，这些提供程序将在选择此项目时添加到地球仪中。
+//             creationFunction: function () {
+//                 return Cesium.createWorldImagery({
+//                     style: Cesium.IonWorldImageryStyle.AERIAL
+//                 })
+//             }
+//         }),
+//         // 本地geoserver影像
+//         new Cesium.ProviderViewModel({
+//             //图层的名称。
+//             name: '本地底图',
+//             //显示项目被隐藏的工具提示
+//             tooltip: '本地底图',
+//             //代表图层的图标
+//             iconUrl: bingAerial,
+//             //一个函数或命令，用于创建一个或多个提供程序，这些提供程序将在选择此项目时添加到地球仪中。
+//             creationFunction: function () {
+//                 return new Cesium.WebMapServiceImageryProvider({
+//                     url: 'http://localhost:9080/geoserver/yaan/wms',
+//                     layers: 'yaan:yaan',
+//                     parameters: {
+//                         service: 'WMS',
+//                         format: 'image/png',
+//                         transparent: true
+//                     }
+//                 })
+//             }
+//         }),
+//
+//     ]
+// }
 function getImageryProviderArr() {
     return [
         new Cesium.ProviderViewModel({
@@ -82,6 +157,7 @@ function getImageryProviderArr() {
             //显示项目被隐藏的工具提示
             tooltip: '天地图',
             //代表图层的图标
+            // iconUrl: require('@/assets/bingAerial.png'),
             iconUrl: bingAerial,
             //一个函数或命令，用于创建一个或多个提供程序，这些提供程序将在选择此项目时添加到地球仪中。
             creationFunction: function () {
@@ -105,8 +181,10 @@ function getImageryProviderArr() {
             //显示项目被隐藏的工具提示
             tooltip: '默认Bing底图',
             //代表图层的图标
+            // iconUrl: require('@/assets/bingAerial.png'),
             iconUrl: bingAerial,
-            //一个函数或命令，用于创建一个或多个提供程序，这些提供程序将在选择此项目时添加到地球仪中。
+            //一个函数或命令，用于创建一个或多个提供程序，这些提供程序
+            // 将在选择此项目时添加到地球仪中。
             creationFunction: function () {
                 return Cesium.createWorldImagery({
                     style: Cesium.IonWorldImageryStyle.AERIAL
@@ -121,6 +199,7 @@ function getImageryProviderArr() {
             tooltip: '本地底图',
             //代表图层的图标
             iconUrl: bingAerial,
+            // iconUrl: require('@/assets/bingAerial.png'),
             //一个函数或命令，用于创建一个或多个提供程序，这些提供程序将在选择此项目时添加到地球仪中。
             creationFunction: function () {
                 return new Cesium.WebMapServiceImageryProvider({
@@ -137,7 +216,6 @@ function getImageryProviderArr() {
 
     ]
 }
-
 //地形
 function getTerrainProviderViewModelsArr() {
     // 别忘了把这部分注释解开
