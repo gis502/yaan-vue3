@@ -31,3 +31,12 @@ export function updataEq(data) {
     data: data
   })
 }
+
+export function getEqbyId(data) {
+  return request({
+    url: '/system/geteqbyid' ,
+    method: 'post',
+    params:data
+  })
+
+}
