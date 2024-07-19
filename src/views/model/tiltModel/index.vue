@@ -1,134 +1,136 @@
 <template>
-  <div id="cesiumContainer" v-if="pageStatus">
-    <el-form class="tool-container-1">
-      <el-row>
-        <div class="modelAdj">模型调整</div>
-        <el-button type="primary" @click="find">找到模型</el-button>
-        <el-button type="primary" @click="showArrow">{{ showArrowText }}</el-button>
-        <!--        <el-button class="el-button--primary" @click="isTerrainLoaded">地形是否加载</el-button>-->
-        <el-button type="primary" @click="hide">{{ modelStatusContent }}</el-button>
-<!--        <el-button type="primary" @click="openDialog('新增')">新增模型</el-button>-->
-        <el-button type="primary" @click="updataPosition">更新位置</el-button>
-      </el-row>
-    </el-form>
-    <el-form class="button-container">
-      <div class="modelAdj">模型选择</div>
-      <!--      <el-button class="el-button&#45;&#45;primary" size="small" @click="selectModel(1)">0.4平方公里模型</el-button>-->
-      <!--      <el-button class="el-button&#45;&#45;primary" size="small" @click="selectModel(2)">7.37平方公里模型</el-button>-->
-      <!--      <el-button class="el-button&#45;&#45;primary" size="small" @click="home">雅安</el-button>-->
-      <el-table :data="tableData" style="width: 100%;margin-bottom: 5px" :header-cell-style="tableHeaderColor"
-                :cell-style="tableColor" @row-click="">
-        <el-table-column prop="name" label="模型名称">
-<!--          <template #default="scope">-->
-<!--            <el-input v-if="scope.row.show" v-model="modelInfo.name" class="w-50 m-2" placeholder="Please Input"/>-->
-<!--          </template>-->
-        </el-table-column>
-        <el-table-column prop="path" label="模型路径" width="">
-<!--          <template #default="scope">-->
-<!--            <el-input v-if="scope.row.show" v-model="modelInfo.path" class="w-50 m-2" placeholder="Please Input"/>-->
-<!--          </template>-->
-        </el-table-column>
-<!--        <el-table-column prop="rz" label="旋转角度" width=""></el-table-column>-->
-        <el-table-column prop="tz" label="模型高度" width=""></el-table-column>
-<!--        <el-table-column prop="rze" label="旋转角度（三维）" width=""></el-table-column>-->
-        <el-table-column prop="tze" label="模型高度（三维）" width=""></el-table-column>
-        <el-table-column label="操作" min-width="120" align="center">
-<!--          <template #default="scope">-->
-<!--            <el-button v-if="!scope.row.show" type="text" :icon="Edit" @click="updataM(scope.row)">修改</el-button>-->
-<!--            <el-button v-if="!scope.row.show" type="text" :icon="Edit" @click="selectModel(scope.row.path)">查看</el-button>-->
-<!--            <el-button v-if="!scope.row.show" type="text" :icon="Delete" @click="deleteM(scope.row)">删除</el-button>-->
-<!--            <el-button v-if="scope.row.show" type="text" :icon="Edit" @click="updataMCommit(scope.row)">确认</el-button>-->
-<!--          </template>-->
-          <template #default="scope">
-            <el-button type="text" :icon="Edit" @click="goModel(scope.row)">查看</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      <el-pagination
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-          :current-page="currentPage"
-          :page-size="pageSize"
-          layout="total, prev, pager, next, jumper"
-          :total="total">
-      </el-pagination>
-    </el-form>
-    <el-form class="tool-container">
-      <el-row>
-        <!--        <br>-->
-        <span style="color: white">调整高度</span>
-        <el-slider
-            v-model="tz"
-            show-input
-            :max="2000"
-            :min="-2000"
-            :step="10"
-            @change="changeHeight(tz)"
-        >
-        </el-slider>
-      </el-row>
-      <el-row>
-        <!--        <br>-->
-        <span style="color: white">绕Z轴旋转模型</span>
-        <el-slider
-            v-model="rz"
-            show-input
-            :max="180"
-            :min="-180"
-            :step="1"
-            @change="changeRotationZ(rz)"
-        >
-        </el-slider>
-      </el-row>
-      <el-row>
-        <!--        <br>-->
-        <span style="color: white">调整模型透明度</span>
-        <el-slider
-            v-model="opacity"
-            show-input
-            :max="100"
-            :min="0"
-            :step="1"
-            @change="changeOpacity(opacity)"
-        >
-        </el-slider>
-      </el-row>
-      <el-row>
-        <el-col :span="8">
-          <span style="color: white">经度：<span id="longitudeShow"></span>°</span>
-        </el-col>
-        <el-col :span="8">
-          <span style="color: white">纬度：<span id="latitudeShow"></span>°</span>
-        </el-col>
-        <el-col :span="8">
-          <span style="color: white">视角高：<span id="altitudeShow"></span>km</span>
-        </el-col>
-      </el-row>
-    </el-form>
+  <div>
+    <div id="cesiumContainer" v-if="pageStatus">
+      <el-form class="tool-container-1">
+        <el-row>
+          <div class="modelAdj">模型调整</div>
+          <el-button type="primary" @click="find">找到模型</el-button>
+          <el-button type="primary" @click="showArrow">{{ showArrowText }}</el-button>
+          <!--        <el-button class="el-button--primary" @click="isTerrainLoaded">地形是否加载</el-button>-->
+          <el-button type="primary" @click="hide">{{ modelStatusContent }}</el-button>
+          <!--        <el-button type="primary" @click="openDialog('新增')">新增模型</el-button>-->
+          <el-button type="primary" @click="updataPosition">更新位置</el-button>
+        </el-row>
+      </el-form>
+      <el-form class="button-container">
+        <div class="modelAdj">模型选择</div>
+        <!--      <el-button class="el-button&#45;&#45;primary" size="small" @click="selectModel(1)">0.4平方公里模型</el-button>-->
+        <!--      <el-button class="el-button&#45;&#45;primary" size="small" @click="selectModel(2)">7.37平方公里模型</el-button>-->
+        <!--      <el-button class="el-button&#45;&#45;primary" size="small" @click="home">雅安</el-button>-->
+        <el-table :data="tableData" style="width: 100%;margin-bottom: 5px" :header-cell-style="tableHeaderColor"
+                  :cell-style="tableColor" @row-click="">
+          <el-table-column prop="name" label="模型名称">
+            <!--          <template #default="scope">-->
+            <!--            <el-input v-if="scope.row.show" v-model="modelInfo.name" class="w-50 m-2" placeholder="Please Input"/>-->
+            <!--          </template>-->
+          </el-table-column>
+          <el-table-column prop="path" label="模型路径" width="">
+            <!--          <template #default="scope">-->
+            <!--            <el-input v-if="scope.row.show" v-model="modelInfo.path" class="w-50 m-2" placeholder="Please Input"/>-->
+            <!--          </template>-->
+          </el-table-column>
+          <!--        <el-table-column prop="rz" label="旋转角度" width=""></el-table-column>-->
+          <el-table-column prop="tz" label="模型高度" width=""></el-table-column>
+          <!--        <el-table-column prop="rze" label="旋转角度（三维）" width=""></el-table-column>-->
+          <el-table-column prop="tze" label="模型高度（三维）" width=""></el-table-column>
+          <el-table-column label="操作" min-width="120" align="center">
+            <!--          <template #default="scope">-->
+            <!--            <el-button v-if="!scope.row.show" type="text" :icon="Edit" @click="updataM(scope.row)">修改</el-button>-->
+            <!--            <el-button v-if="!scope.row.show" type="text" :icon="Edit" @click="selectModel(scope.row.path)">查看</el-button>-->
+            <!--            <el-button v-if="!scope.row.show" type="text" :icon="Delete" @click="deleteM(scope.row)">删除</el-button>-->
+            <!--            <el-button v-if="scope.row.show" type="text" :icon="Edit" @click="updataMCommit(scope.row)">确认</el-button>-->
+            <!--          </template>-->
+            <template #default="scope">
+              <el-button type="text" :icon="Edit" @click="goModel(scope.row)">查看</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="currentPage"
+            :page-size="pageSize"
+            layout="total, prev, pager, next, jumper"
+            :total="total">
+        </el-pagination>
+      </el-form>
+      <el-form class="tool-container">
+        <el-row>
+          <!--        <br>-->
+          <span style="color: white">调整高度</span>
+          <el-slider
+              v-model="tz"
+              show-input
+              :max="2000"
+              :min="-2000"
+              :step="10"
+              @change="changeHeight(tz)"
+          >
+          </el-slider>
+        </el-row>
+        <el-row>
+          <!--        <br>-->
+          <span style="color: white">绕Z轴旋转模型</span>
+          <el-slider
+              v-model="rz"
+              show-input
+              :max="180"
+              :min="-180"
+              :step="1"
+              @change="changeRotationZ(rz)"
+          >
+          </el-slider>
+        </el-row>
+        <el-row>
+          <!--        <br>-->
+          <span style="color: white">调整模型透明度</span>
+          <el-slider
+              v-model="opacity"
+              show-input
+              :max="100"
+              :min="0"
+              :step="1"
+              @change="changeOpacity(opacity)"
+          >
+          </el-slider>
+        </el-row>
+        <el-row>
+          <el-col :span="8">
+            <span style="color: white">经度：<span id="longitudeShow"></span>°</span>
+          </el-col>
+          <el-col :span="8">
+            <span style="color: white">纬度：<span id="latitudeShow"></span>°</span>
+          </el-col>
+          <el-col :span="8">
+            <span style="color: white">视角高：<span id="altitudeShow"></span>km</span>
+          </el-col>
+        </el-row>
+      </el-form>
 
-<!--    <el-dialog v-model="dialogFormVisible" title="新增模型" width="500" :show-close="false">-->
-<!--      <el-form :model="modelInfo">-->
-<!--        <el-form-item label="模型名称">-->
-<!--          <el-input v-model="modelInfo.name" autocomplete="off"/>-->
-<!--        </el-form-item>-->
-<!--        <el-form-item label="模型路径">-->
-<!--          <el-input v-model="modelInfo.path" autocomplete="off"/>-->
-<!--        </el-form-item>-->
-<!--      </el-form>-->
-<!--      <template #footer>-->
-<!--        <div class="dialog-footer">-->
-<!--          <el-button @click="closeDialog">Cancel</el-button>-->
-<!--          <el-button type="primary" @click="commitDialog">-->
-<!--            Confirm-->
-<!--          </el-button>-->
-<!--        </div>-->
-<!--      </template>-->
-<!--    </el-dialog>-->
+      <!--    <el-dialog v-model="dialogFormVisible" title="新增模型" width="500" :show-close="false">-->
+      <!--      <el-form :model="modelInfo">-->
+      <!--        <el-form-item label="模型名称">-->
+      <!--          <el-input v-model="modelInfo.name" autocomplete="off"/>-->
+      <!--        </el-form-item>-->
+      <!--        <el-form-item label="模型路径">-->
+      <!--          <el-input v-model="modelInfo.path" autocomplete="off"/>-->
+      <!--        </el-form-item>-->
+      <!--      </el-form>-->
+      <!--      <template #footer>-->
+      <!--        <div class="dialog-footer">-->
+      <!--          <el-button @click="closeDialog">Cancel</el-button>-->
+      <!--          <el-button type="primary" @click="commitDialog">-->
+      <!--            Confirm-->
+      <!--          </el-button>-->
+      <!--        </div>-->
+      <!--      </template>-->
+      <!--    </el-dialog>-->
 
+    </div>
+    <!--  <div v-if="!pageStatus">-->
+    <!--    <tiltTable />-->
+    <!--  </div>-->
   </div>
-  <!--  <div v-if="!pageStatus">-->
-  <!--    <tiltTable />-->
-  <!--  </div>-->
 </template>
 
 <script setup>
@@ -138,7 +140,9 @@ import {initCesium} from '@/cesium/tool/initCesium.js'
 import {Edit, Delete} from '@element-plus/icons-vue'
 import {addModelApi, deleteModel, getAllModel, updataModel,updataModelNoElevation,updataModelElevation} from '@/api/system/model.js'
 // import tiltTable from '@/components/Model/tiltModel/tiltTable.vue'
-import { ElMessage } from 'element-plus'
+import { ElMessageBox } from 'element-plus';
+import { ElMessage } from 'element-plus';
+import {CustomShader} from "cesium";
 
 let pageStatus = ref(true)
 let tz = ref(0)
@@ -323,6 +327,11 @@ function selectModel(modelName) {
 function initModel(modelName) {
 
   let baseURL = import.meta.env.VITE_APP_API_URL
+
+  const customShader = new CustomShader({
+    lightingModel:0
+  })
+
   const tileset = new Cesium.Cesium3DTileset({
     url: baseURL + "/geoserver/www/" + modelName + "/tileset.json",
     loadSiblings: true,
@@ -330,7 +339,8 @@ function initModel(modelName) {
     maximumScreenSpaceError: 64,//默认16，值越大经度越小
     maximumMemoryUsage: 3000,//可用于缓存瓦片的最大GPU内存量（以MB为单位）
     skipLevelOfDetail: true,
-    preferLeaves: true
+    preferLeaves: true,
+    customShader: customShader
   });
 
   //如果遇到url中特殊字符+问题，前往node_modules\cesium\Source\ThirdParty\uri.js修改'%2B': '+'为'%2B': '%2B',禁止将json中的%2B转为+，因为geoserver无法识别+路径
