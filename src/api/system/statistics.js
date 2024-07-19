@@ -16,3 +16,19 @@ export function exportExcel(data) {
         data
     })
 }
+
+export function getField(enumType) {
+    return request({
+        url: '/Field',
+        method: 'GET',
+        params: { enumType }
+    });
+}
+
+export function getYaanCasualties(data) {
+    return request({
+        url: '/statistics/getData',
+        method: 'post',
+        data
+    })
+}

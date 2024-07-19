@@ -19,6 +19,21 @@
       <el-col :span="1.5">
         <el-button type="danger" plain icon="Delete" class="button" @click="clearSelection()">清空选择</el-button>
       </el-col>
+      <el-col :span="1.5">
+        <el-select
+            v-model="flag"
+            placeholder="Select"
+            size="large"
+            style="width: 240px"
+        >
+          <el-option
+              v-for="item in options"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+          />
+        </el-select>
+      </el-col>
     </el-row>
 
     <el-table
@@ -30,13 +45,14 @@
     >
       <el-table-column type="selection" width="50" align="center" :reserve-selection="true"/>
       <el-table-column prop="id" label="序号" width="50" align="center"/>
-      <el-table-column prop="earthquakeId" label="地震标识" width="200" align="center"/>
-      <el-table-column prop="earthquake" label="震区" width="200" align="center"/>
-      <el-table-column prop="aftershockCount" label="余震次数累计" align="center"/>
-      <el-table-column prop="magnitude30To39" label="3.0-3.9级" align="center"/>
-      <el-table-column prop="magnitude40To49" label="4.0-4.9级" align="center"/>
-      <el-table-column prop="magnitude50To59" label="5.0-5.9级" align="center"/>
-      <el-table-column prop="insertTime" label="统计时间" width="250" align="center" :formatter="dateFormatter"/>
+      <el-table-column
+          v-for="col in columns"
+          :key="col.prop"
+          :prop="col.prop"
+          :label="col.label"
+          :align="col.align"
+          :width="col.width"
+      />
     </el-table>
     <el-pagination
         v-model:current-page="currentPage"
@@ -77,37 +93,87 @@
 <script setup>
 import {ref, onMounted} from 'vue'
 import {ElMessage} from "element-plus";
-import {exportExcel, getYaanAftershockStatistics} from "@/api/system/statistics.js";
+import {exportExcel,getField,getYaanCasualties} from "@/api/system/statistics.js";
 import {Search} from "@element-plus/icons-vue";
 
 const dialogVisible = ref(false)
-
+const flag = ref("YaanAftershockStatistics")
 const currentPage = ref(1)
 const pageSize = ref(10)
 const requestParams = ref("")
-
+const options = [
+  {
+    label: '余震灾害统计表',
+    value: 'YaanAftershockStatistics',
+  },
+  {
+    label: '人员伤亡情况表',
+    value: 'YaanCasualties',
+  }
+]
 onMounted(() => {
-  getList()
+  getTableField()
+  getYaanCasualtiesList()
 })
-
 const tableData = ref([])
+const field = ref([])
+const name = ref([])
+const columns = ref([]); // 用于存储表格列配置
 const total = ref()
+/** 监听 */
+watch(flag, (newFlag) => {
+  // 清空选择
+  clearSelection();
+  value.value = [];
+  getTableField();
+  getYaanCasualtiesList();
 
+});
 /** 搜索按钮操作 */
 function handleQuery() {
   currentPage.value = 1;
-  getList();
+  getYaanCasualtiesList()
 }
 
 // 请求数据
-const getList = () => {
-  getYaanAftershockStatistics({
+const getYaanCasualtiesList = () =>{
+  getYaanCasualties({
     currentPage: currentPage.value,
     pageSize: pageSize.value,
-    requestParams: requestParams.value
+    requestParams: requestParams.value,
+    flag:flag.value
   }).then(res => {
-    tableData.value = res.records
-    total.value = res.total
+    tableData.value = res.data.records
+    total.value = res.data.total
+  })
+  console.log("请求数据")
+}
+const generateColumnConfig = () => {
+  return field.value.map((fieldName, index) => ({
+    prop: fieldName,
+    label: name.value[index],
+    align: "center",
+    width: index < 2 ? "200" : undefined // Example: setting width for the first two columns
+  }));
+};
+const generateFieldData = () => {
+  return field.value.map((fieldName, index) => ({
+    value: fieldName,    // `value` should match field identifier
+    desc: name.value[index], // `desc` should match field description
+    disabled: false     // Optional: define if the item is selectable
+  }));
+};
+
+/** 获取字段 */
+const getTableField = ()=>{
+  console.log("flag",flag.value)
+  getField(flag.value).then(res=>{
+    console.log(res)
+    const map = new Map(Object.entries(res.data))
+    field.value = Array.from(map.keys())
+    name.value = Array.from(map.values())
+    data.value = generateData();
+    columns.value = generateColumnConfig();
   })
 }
 
@@ -119,24 +185,23 @@ function getRowKey(row) {
 // 分页函数
 const handleSizeChange = (val) => {
   pageSize.value = val
-  getList()
+  getYaanCasualtiesList()
 }
 
 const handleCurrentChange = (val) => {
   currentPage.value = val
-  getList()
+  getYaanCasualtiesList()
 }
 
 const generateData = _ => {
-  const data = []
-  const names = ["统计截止时间", "地震标识", "震区", "余震次数累计", "3.0-3.9级", "4.0-4.9级", "5.0-5.9级"]
-  const filed = ["insertTime", "earthquakeId", "earthquake", "aftershockCount", "magnitude30To39", "magnitude40To49", "magnitude50To59", "magnitude50To59"]
-  for (let i = 0; i < names.length; i++) {
+  const data = [];
+  // 确保 field 和 name 数组已经填充
+  for (let i = 0; i < field.value.length; i++) {
     data.push({
-      value: filed[i],
-      desc: names[i],
-      disabled: false,
-    })
+      value: field.value[i],
+      desc: name.value[i],
+      disabled: false
+    });
   }
   return data
 }
@@ -157,7 +222,8 @@ const exportStatistics = () => {
 
     exportExcel({
       fields: value.value,
-      ids: ids
+      ids: ids,
+      flag:flag.value
     }).then(res => {
       const url = window.URL.createObjectURL(new Blob([res], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
       const link = document.createElement('a');
@@ -183,20 +249,6 @@ const clearSelection = () => {
   multipleTableRef.value?.clearSelection()
 }
 
-const formatDate = (isoString) => {
-  const date = new Date(isoString);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-};
-
-const dateFormatter = (row, column, cellValue) => {
-  return formatDate(cellValue);
-}
 
 
 </script>
