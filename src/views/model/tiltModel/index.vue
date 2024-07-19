@@ -124,11 +124,11 @@
 <!--        </div>-->
 <!--      </template>-->
 <!--    </el-dialog>-->
-
+    <!--  <div v-if="!pageStatus">-->
+    <!--    <tiltTable />-->
+    <!--  </div>-->
   </div>
-  <!--  <div v-if="!pageStatus">-->
-  <!--    <tiltTable />-->
-  <!--  </div>-->
+
 </template>
 
 <script setup>
