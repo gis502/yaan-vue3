@@ -1,0 +1,39 @@
+.container {
+  margin: 20px;
+  padding: 20px;
+  border-radius: 8px; /* 圆角 */
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1); /* 阴影 */
+  color: #fff; /* 字体颜色 */
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  margin-right: 10px;
+  width: 250px;
+}
+
+.button {
+  margin-right: 10px;
+}
+
+.data-container {
+  background: #ffffff; /* 背景颜色 */
+  padding: 20px;
+  border-radius: 8px; /* 圆角 */
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1); /* 阴影 */
+  color: #1f2d3d; /* 字体颜色 */
+}
+
+.table {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.pagination {
+  text-align: right;
+}
