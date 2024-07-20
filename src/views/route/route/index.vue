@@ -24,8 +24,9 @@ import end from '@/assets/end.svg'
 import {Entity} from "cesium";
 import RouterPanel from '@/components/Cesium/RouterPanel.vue'
 import cesiumPlot from '@/cesium/plot/cesiumPlot.js'
-import { getPloy } from '@/api/system/plot'
 import { initWebSocket } from '@/cesium/WS.js'
+import {getDisasterReserves} from "../../../api/system/emergency.js";
+import disasterReliefMaterialReserve from '@/assets/images/disasterReliefMaterialReserve.png';
 
 
 export default {
@@ -50,8 +51,6 @@ export default {
     this.watchTerrainProviderChanged();
     cesiumPlot.init(window.viewer, this.websock, this.$store)
     console.log(" this.$router.currentRoute11111111:", this.$router.currentRoute)
-    // this.id = this.$router.currentRoute.query.id
-    this.id = 'ckwtest123'
     this.initPlot(this.id)
     this.initWebsocket()
     //---------------------------
@@ -77,43 +76,69 @@ export default {
       document.getElementsByClassName('cesium-baseLayerPicker-sectionTitle')[1].innerHTML = '地形服务';
     },
     initPlot(){
-      getPloy({id:"ckwtest123"}).then(res=>{
-        this.plotData = res
+      getDisasterReserves().then(res=>{
         let data = res
-        let pointArr = data.filter( e => e.drawtype === 'point')
-        let polylineArr = data.filter( e => e.drawtype === 'polyline')
-        let polygonArr = data.filter( e => e.drawtype === 'polygon')
+        console.log("data",data)
+        let pointArr = data.filter(e => e.longitude !== null)
+        // console.log("pointArr",pointArr)
         //画点
         this.drawPoint(pointArr)
-        this.drawPolyline(polylineArr)
-        this.drawPolygon(polygonArr)
       })
     },
-    drawPoint(pointArr){
-      pointArr.forEach(element=>{
-        window.viewer.entities.add({
-          id:element.drawid,
-          position: Cesium.Cartesian3.fromDegrees(Number(element.longitude) , Number(element.latitude), Number(element.height)),
-          billboard: {
-            image: element.img,
-            eyeOffset: new Cesium.Cartesian3(0, 0, 0),//与坐标位置的偏移距离
-            color: Cesium.Color.WHITE.withAlpha(1),//颜色
-            scale: 0.8,//缩放比例
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,// 绑定到地形高度,让billboard贴地
-            depthTest: false,//禁止深度测试但是没有下面那句有用
-            disableDepthTestDistance: Number.POSITIVE_INFINITY//不再进行深度测试（真神）
-          },
-          properties:{
-            type:element.pointtype,
-            time:element.timestamp,
-            name:element.pointname,
-            lon:element.longitude,
-            lat:element.latitude,
-            describe:element.pointdescribe,
-            id:element.drawid
-          }
-        })
-      })
+    drawPoint(pointArr) {
+      pointArr.forEach(element => {
+        // 检查是否已存在具有相同ID的实体
+        let existingEntity = window.viewer.entities.getById(element.id);
+        if (existingEntity) {
+          console.warn(`Entity with id ${element.id} already exists. Skipping this entity.`);
+          return; // 跳过这个实体
+        }
+
+        // 检查经度、纬度和高度是否为有效数值
+        let longitude = Number(element.longitude);
+        let latitude = Number(element.latitude);
+
+        if (isNaN(longitude) || isNaN(latitude)) {
+          console.error(`Invalid coordinates for entity with id ${element.id}:`, { longitude, latitude});
+          return; // 跳过无效坐标的实体
+        }
+
+        // 检查经度和纬度是否在合理范围内
+        if (longitude < -180 || longitude > 180 || latitude < -90 || latitude > 90) {
+          console.error(`Coordinates out of range for entity with id ${element.id}:`, { longitude, latitude });
+          return; // 跳过坐标超出范围的实体
+        }
+
+        // 如果不存在相同ID的实体，则添加新的实体
+        try {
+          window.viewer.entities.add({
+            id: element.id,
+            position: Cesium.Cartesian3.fromDegrees(longitude, latitude),
+            billboard: {
+              image: disasterReliefMaterialReserve, // 使用导入的图标路径
+              width: 50,
+              height: 50,
+              eyeOffset: new Cesium.Cartesian3(0, 0, 0), // 与坐标位置的偏移距离
+              color: Cesium.Color.WHITE.withAlpha(1), // 颜色
+              scale: 0.8, // 缩放比例
+              heightReference: Cesium.HeightReference.CLAMP_TO_GROUND, // 绑定到地形高度,让billboard贴地
+              depthTest: false, // 禁止深度测试
+              disableDepthTestDistance: Number.POSITIVE_INFINITY // 不再进行深度测试
+            },
+            properties: {
+              address: element.address,
+              county: element.county,
+              contactPerson: element.contactPerson,
+              lon: element.longitude,
+              lat: element.latitude,
+              contactPhone: element.contactPhone,
+              id: element.id
+            }
+          });
+        } catch (error) {
+          console.error(`Error adding entity with id ${element.id}:`, error);
+        }
+      });
     },
     initWebsocket() {
       this.websock = initWebSocket()
@@ -244,9 +269,9 @@ export default {
         id:billBoardId,
         position: position,
         billboard: {
-          image: img,
-          // width: 25,//图片宽度,单位px
-          // height: 25,//图片高度，单位px // 会影响point大小，离谱
+          image: disasterReliefMaterialReserve,
+          width: 25,//图片宽度,单位px
+          height: 25,//图片高度，单位px
           // eyeOffset: new Cesium.Cartesian3(-1, 1, 0),//与坐标位置的偏移距离
           heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,// 绑定到地形高度,让billboard贴地
           depthTest: false,//禁止深度测试但是没有下面那句有用
@@ -350,7 +375,7 @@ export default {
         }
       });
     },
-    // 所有entity实体类型点击事件的handler（billboard、polyline、polygon）
+
     entitiesClickPonpHandler() {
       let that = this
       window.viewer.screenSpaceEventHandler.setInputAction(async (click) => {
@@ -395,12 +420,12 @@ export default {
           // 2-5 更新弹窗位置
           // that.selectedEntity = window.selectedEntity
           that.popupData = {
-            type: window.selectedEntity.properties.type.getValue(),
-            time: window.selectedEntity.properties.time.getValue(),
-            name: window.selectedEntity.properties.name.getValue(),
+            address: window.selectedEntity.properties.address.getValue(),
+            contactPerson: window.selectedEntity.properties.contactPerson.getValue(),
+            contactPhone: window.selectedEntity.properties.contactPhone.getValue(),
             lon: window.selectedEntity.properties.lon.getValue(),
             lat: window.selectedEntity.properties.lat.getValue(),
-            describe: window.selectedEntity.properties.describe.getValue(),
+            county: window.selectedEntity.properties.county.getValue(),
           };
           this.popupVisible = true; // 显示弹窗
           this.updatePopupPosition(); // 更新弹窗的位置
@@ -434,6 +459,7 @@ export default {
         }
       }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
     },
+
     //--------------------弹窗----------------------
     // 判断是否有高程
     // 更新弹窗的位置
