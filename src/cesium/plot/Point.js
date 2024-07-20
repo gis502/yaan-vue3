@@ -35,7 +35,7 @@ export default class Point {
         pointInfo.height = height
         pointInfo.img = img//that.matchIcon(pointType)
         pointInfo.type = pointType//that.refenceTypeList[pointType]
-        pointInfo.id = Date.now()
+        pointInfo.id = that.guid()
         that.store.setPointInfo1(pointInfo)
         // 1-4 异步执行完成
         resolve('异步操作完成');
@@ -45,12 +45,12 @@ export default class Point {
     })
   }
   // 画点
-  drawPoint(pointInfo) {
+  drawPoint(data) {
     window.viewer.entities.add({
-      id: pointInfo.id,
-      position: Cesium.Cartesian3.fromDegrees(Number(pointInfo.lon), Number(pointInfo.lat), Number(pointInfo.height)),
+      id: data.plotid,
+      position: Cesium.Cartesian3.fromDegrees(Number(data.longitude), Number(data.latitude), Number(data.height)),
       billboard: {
-        image: pointInfo.img,
+        image: data.img,
         width: 50,//图片宽度,单位px
         height: 50,//图片高度，单位px // 会影响point大小，离谱
         eyeOffset: new Cesium.Cartesian3(0, 0, 0),//与坐标位置的偏移距离
@@ -61,15 +61,7 @@ export default class Point {
         disableDepthTestDistance: Number.POSITIVE_INFINITY//不再进行深度测试（真神）
       },
       properties: {
-        type: pointInfo.type,
-        lon: pointInfo.lon,
-        lat: pointInfo.lat,
-        id: pointInfo.id,
-        height: pointInfo.height,
-        img: pointInfo.img,
-        describe: pointInfo.describe,
-        time: pointInfo.time,
-        name: pointInfo.name,
+        data
       }
     })
   }
@@ -81,5 +73,13 @@ export default class Point {
   matchIcon(type) {
     let list = matchMark() // 封装的marchMark
     return list[type]
+  }
+
+  guid() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      let r = Math.random() * 16 | 0,
+          v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
   }
 }

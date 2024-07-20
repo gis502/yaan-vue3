@@ -74,11 +74,11 @@ export default {
     },
     tableHeaderColor(){
       return {
-        // 'border-color':'#313a44',
-        'background-color': '#ad0537',
-        // 'color': '#fff',
+        'border-color': '#293038',
+        'background-color': '#293038 !important', // 此处是elemnetPlus的奇怪bug，header-cell-style中背景颜色不加!important不生效
+        'color': '#fff',
         'padding': '0',
-        'text-align':'center'
+        'text-align': 'center',
       }
     },
     // 修改table header的背景色

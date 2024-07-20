@@ -35,10 +35,10 @@ export default defineConfig(({ mode, command }) => {
           changeOrigin: true,
           rewrite: (p) => p.replace(/^\/dev-api/, '')
         },
-        '/tdtproxy': {
+        '/tdtproxy':{
           target: 'http://t0.tianditu.com/',
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/tdtproxy/,'')
+          rewrite: (path) => path.replace(/^\/tdtproxy/, ''),
         }
       }
     },
