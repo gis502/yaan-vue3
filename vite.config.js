@@ -25,7 +25,7 @@ export default defineConfig(({ mode, command }) => {
     },
     // vite 相关配置
     server: {
-      port: 81,
+      port: 80,
       host: true,
       open: true,
       proxy: {
@@ -34,6 +34,11 @@ export default defineConfig(({ mode, command }) => {
           target: 'http://localhost:8080',
           changeOrigin: true,
           rewrite: (p) => p.replace(/^\/dev-api/, '')
+        },
+        '/tdtproxy': {
+          target: 'http://t0.tianditu.com/',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/tdtproxy/,'')
         }
       }
     },

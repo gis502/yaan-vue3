@@ -7,6 +7,67 @@
       <el-button class="el-button--primary" @click="removePoint">删除障碍区域</el-button>
       <el-button class="el-button--primary" @click="removePolyline">删除路径规划</el-button>
     </el-form>
+
+<!--      <div id="supplies">-->
+<!--          <el-form class="eqTable">-->
+<!--              <div style="margin-bottom: 10px;">-->
+<!--                  <el-input v-model="inputRadius" placeholder="请输入搜查范围/km"-->
+<!--                            style="width: 170px;margin-right: 5px;" clearable>-->
+<!--                  </el-input>-->
+<!--                  <el-button class="el-button&#45;&#45;primary" @click="searchSupply">查找物资</el-button>-->
+<!--                  <el-button class="el-button&#45;&#45;primary" @click="addSupplyPoint">添加物资点</el-button>-->
+<!--                  <el-button class="el-button&#45;&#45;primary" @click="showAllSupplyPoints">显示所有物资点</el-button>-->
+<!--              </div>-->
+
+<!--              <el-table :data="showSuppliesList" style="width: 100%;margin-bottom: 5px;text-align: center" :stripe="true"-->
+<!--                        :header-cell-style="tableHeaderColor"-->
+<!--                        :cell-style="tableColor"-->
+<!--                        :row-style="{height: '40px'}"-->
+<!--                        @row-click="showSupplyPoint"-->
+<!--              >-->
+<!--                  <el-table-column prop="position" label="位置" width="50"></el-table-column>-->
+<!--                  <el-table-column prop="type" label="物资种类" width="150"></el-table-column>-->
+<!--                  <el-table-column prop="count" label="数量" width="100"></el-table-column>-->
+<!--                  <el-table-column prop="tel" label="联系电话"></el-table-column>-->
+
+<!--              </el-table>-->
+<!--              <el-pagination-->
+<!--                      @size-change="handleSizeChange"-->
+<!--                      @current-change="handleCurrentChange"-->
+<!--                      :current-page="currentPage"-->
+<!--                      :page-size="pageSize"-->
+<!--                      layout="total, prev, pager, next, jumper"-->
+<!--                      :total="total">-->
+<!--              </el-pagination>-->
+<!--          </el-form>-->
+<!--      </div>-->
+<!--      <el-dialog class="dialogDiv" :visible.sync="DialogFormVisible" title="添加标注信息" width="500"-->
+<!--                 :close-on-click-modal="false" :destroy-on-close="true" :show-close="false">-->
+<!--          <el-form :model="this.addSupplyPointCurrently">-->
+<!--              <el-form-item label="位置" :label-width="formLabelWidth">-->
+<!--                  <el-input v-model="addSupplyPointCurrently.position" autocomplete="off"/>-->
+<!--              </el-form-item>-->
+<!--              <el-form-item label="物资种类" :label-width="formLabelWidth">-->
+<!--                  <el-input v-model="addSupplyPointCurrently.type" autocomplete="off"/>-->
+<!--              </el-form-item>-->
+<!--              <el-form-item label="数量" :label-width="formLabelWidth">-->
+<!--                  <el-input v-model="addSupplyPointCurrently.count" autocomplete="off"/>-->
+<!--              </el-form-item>-->
+<!--              <el-form-item label="联系电话" :label-width="formLabelWidth">-->
+<!--                  <el-input v-model="addSupplyPointCurrently.tel" autocomplete="off"/>-->
+<!--              </el-form-item>-->
+<!--              <el-form-item label="经度" :label-width="formLabelWidth">-->
+<!--                  <el-input v-model="addSupplyPointCurrently.lng" autocomplete="off" readonly />-->
+<!--              </el-form-item>-->
+<!--              <el-form-item label="维度" :label-width="formLabelWidth">-->
+<!--                  <el-input v-model="addSupplyPointCurrently.lat" autocomplete="off" readonly />-->
+<!--              </el-form-item>-->
+<!--          </el-form>-->
+<!--          <div slot="footer" class="dialog-footer">-->
+<!--              <el-button type="primary" @click="cancelAddSupplyPoint">取消</el-button>-->
+<!--              <el-button type="primary" @click="commitAddSupplyPoint">确认</el-button>-->
+<!--          </div>-->
+<!--      </el-dialog>-->
   </div>
 </template>
 

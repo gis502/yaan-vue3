@@ -20,21 +20,36 @@ export default class Polyline {
   }
 
   //激活
-  activate(material,typeName,img,eqid) {
+  activate(material,typeName,img,eqid,obj) {
+    console.log(this.ws)
     this.eqid = eqid
     this.img = img
     this.typeName = typeName
     this.material = material
     this.status = 1
-    this.positions = [];
-    this.tempPositions = [];
-    this.deactivate();
-    this.clear();
-    // 创建Date对象
-    let currentDate = new Date();
-    // 获取当前时间的时间戳作为ID
-    this.initId = currentDate.getTime() + "polyline";
-    this.registerEvents(); //注册鼠标事件
+    if(obj === undefined){
+      this.positions = [];
+      this.tempPositions = [];
+      this.deactivate();
+      this.clear();
+      // 创建Date对象
+      let currentDate = new Date();
+      // 获取当前时间的时间戳作为ID
+      this.initId = currentDate.getTime() + "polyline";
+      this.registerEvents(); //注册鼠标事件
+    }else{
+      this.ws.send(JSON.stringify({
+        type: "polyline",
+        operate: "add",
+        data: {
+          id: obj.id,
+          type: obj.type,
+          positions: obj.position,
+          img: obj.img,
+          eqid: obj.eqid
+        }
+      }))
+    }
   }
 
   //禁用
@@ -128,6 +143,7 @@ export default class Polyline {
     if(that.typeName==="地裂缝"||that.typeName==="可用供水管网"||that.typeName==="不可用供水管网"){
       img = this.img
     }
+    // console.log(this.ws)
     this.ws.send(JSON.stringify({
       type: "polyline",
       operate: "add",
@@ -271,54 +287,54 @@ export default class Polyline {
     let onlyDrawId = this.distinguishPolylineId(polylineArr)
     // 1-2根据drawid来画线
     onlyDrawId.forEach(onlyDrawIdItem => {
-        // 1-3 把数据库同一drawid的点数据放入此数组
-        let line = []
-        polylineArr.forEach(polylineElement => {
-          if (polylineElement.drawid === onlyDrawIdItem) {
-            line.push(polylineElement)
+          // 1-3 把数据库同一drawid的点数据放入此数组
+          let line = []
+          polylineArr.forEach(polylineElement => {
+            if (polylineElement.drawid === onlyDrawIdItem) {
+              line.push(polylineElement)
+            }
+          })
+          // 1-4 pointLinePoints用来存构成线的点实体
+          let pointLinePoints = []
+          for (let i = 0; i < line.length; i++) {
+            let p = window.viewer.entities.add({
+              show: false,
+              position: new Cesium.Cartesian3(line[i].longitude, line[i].latitude, line[i].height),
+              id: line[i].drawid + 'point' + (i + 1),
+              point: {
+                pixelSize: 0,
+                color: Cesium.Color.RED,
+                outlineWidth: 2,
+                outlineColor: Cesium.Color.DARKRED,
+                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,// 绑定到地形高度,让billboard贴地
+                depthTest: false,//禁止深度测试但是没有下面那句有用
+                disableDepthTestDistance: Number.POSITIVE_INFINITY//不再进行深度测试（真神）
+              },
+            });
+            pointLinePoints.push(p)
           }
-        })
-        // 1-4 pointLinePoints用来存构成线的点实体
-        let pointLinePoints = []
-        for (let i = 0; i < line.length; i++) {
-          let p = window.viewer.entities.add({
-            show: false,
-            position: new Cesium.Cartesian3(line[i].longitude, line[i].latitude, line[i].height),
-            id: line[i].drawid + 'point' + (i + 1),
-            point: {
-              pixelSize: 0,
-              color: Cesium.Color.RED,
-              outlineWidth: 2,
-              outlineColor: Cesium.Color.DARKRED,
-              heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,// 绑定到地形高度,让billboard贴地
-              depthTest: false,//禁止深度测试但是没有下面那句有用
-              disableDepthTestDistance: Number.POSITIVE_INFINITY//不再进行深度测试（真神）
+          // 1-5 把数据库同一drawid的点数据转化成Cartesian3类型的数组
+          let positionsArr = []
+          line.forEach(e => {
+            positionsArr.push(new Cesium.Cartesian3(e.longitude, e.latitude, e.height))
+          })
+          let material = getmaterial(line[0].pointtype,line[0].img)
+          // 1-6 画线
+          window.viewer.entities.add({
+            id: onlyDrawIdItem,
+            polyline: {
+              positions: positionsArr,
+              width: 5,
+              material: material,
+              // material: Cesium.Color.YELLOW,
+              depthFailMaterial: Cesium.Color.YELLOW,
+              clampToGround: true,
             },
-          });
-          pointLinePoints.push(p)
+            properties: {
+              pointPosition: pointLinePoints,
+            }
+          })
         }
-        // 1-5 把数据库同一drawid的点数据转化成Cartesian3类型的数组
-        let positionsArr = []
-        line.forEach(e => {
-          positionsArr.push(new Cesium.Cartesian3(e.longitude, e.latitude, e.height))
-        })
-        let material = getmaterial(line[0].pointtype,line[0].img)
-        // 1-6 画线
-        window.viewer.entities.add({
-          id: onlyDrawIdItem,
-          polyline: {
-            positions: positionsArr,
-            width: 5,
-            material: material,
-            // material: Cesium.Color.YELLOW,
-            depthFailMaterial: Cesium.Color.YELLOW,
-            clampToGround: true,
-          },
-          properties: {
-            pointPosition: pointLinePoints,
-          }
-        })
-      }
     )
   }
 

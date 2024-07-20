@@ -21,6 +21,12 @@
 
     </el-form>
     <el-form class="noteContainer">
+        <div style="display: flex;flex-direction: row;">
+            <input type="file" @change="handleFileChange" style="width: 150px; height: 40px;" />
+            <el-button type="primary" @click="downloadTemplate">下载模板</el-button>
+            <el-button @click="uploadExcel" type="primary" style="width: 80px;">导入</el-button>
+            <el-button @click="exportExcel" type="primary" style="width: 80px;">导出</el-button>
+        </div>
       <div class="modelAdj">标绘工具</div>
       <el-row>
         <el-col :span="13">
@@ -96,6 +102,7 @@ import addMarkCollectionDialog from "@/components/Cesium/addMarkCollectionDialog
 import commonPanel from "@/components/Cesium/CommonPanel";
 import {mapState} from "pinia";
 import {useCesiumStore} from '@/store/modules/cesium.js'
+import ExcelJS from 'exceljs';
 
 export default {
   components: {
@@ -181,12 +188,18 @@ export default {
       plotTreeClassification: [],
       //----------------------------------
       total: 0,
-      pageSize: 6,
+      pageSize: 5,
       currentPage: 1,
       getEqData: [],
       tableData: [],
       //----------------------------------
       eqid: '',
+
+      //----------------------------------
+      selectedFile: null,
+      uploadPointData: [],
+      uploadLineData: [],
+      finishUploadLine: false
     };
   },
   mounted() {
@@ -325,12 +338,16 @@ export default {
         } else {
           this.showPolygon = false
         }
+
         // 4-1选中线时触发
         if (Cesium.defined(pickedEntity) && window.selectedEntity._polyline !== undefined) {
           let status = cesiumPlot.drawPolylineStatus()
           if (status === 0) {
             that.showPolyline = true
             // that.polylinePosition = window.selectedEntity
+          }
+          if(this.finishUploadLine){
+              that.showPolyline = true
           }
         } else {
           this.showPolyline = false
@@ -593,121 +610,338 @@ export default {
         }
       });
     },
+      // 导出
+      async exportExcel() {
+          const workbook = new ExcelJS.Workbook();
+          const worksheet = workbook.addWorksheet('Sheet1');
+
+          // 添加标题
+          worksheet.addRow(['标绘数据']);
+          worksheet.mergeCells('A1:J1'); // 合并单元格
+          worksheet.getCell('A1').font = { size: 16, bold: true }; // 设置字体大小 加粗
+          worksheet.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' }; // 垂直居中
+
+          // 添加表头
+          worksheet.addRow(['地震地点', '标注时间', '标注种类(点/线/面)', '标注类型',
+              '纬度', '经度', '高度', '线路段',  '标注名称', '标注说明']);
+          const headerRow = worksheet.getRow(2);
+          headerRow.font = { bold: true };
+          headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
+
+          // 添加数据
+          this.tableData1.forEach(item => {
+              worksheet.addRow([item.eqid, item.timestamp, item.drawtype, item.latitude, item.longitude, item.drawid, item.pointtype, item.pointname, item.pointdescribe, item.height]);
+          });
+
+          // 将数据写入缓冲区
+          const buffer = await workbook.xlsx.writeBuffer();
+
+          // 使用 file-saver 保存文件
+          saveAs(new Blob([buffer], { type: 'application/octet-stream' }), 'tableData1.xlsx');
+      },
+      handleFileChange(event) {
+          const file = event.target.files[0];
+          this.selectedFile = file;
+      },
+      // 导入
+      async uploadExcel() {
+          if (!this.selectedFile) {
+              alert('请先选择一个文件');
+              return;
+          }
+
+          const workbook = new ExcelJS.Workbook();
+          const reader = new FileReader();
+
+          reader.onload = async e => {
+              const buffer = e.target.result;
+              await workbook.xlsx.load(buffer);
+              const worksheet = workbook.getWorksheet('Sheet1');
+              const data = [];
+
+              worksheet.eachRow((row, rowNumber) => {
+                  if (rowNumber > 2) {
+                      // 跳过标题和表头
+                      const rowData = {
+                          eqPosition: row.getCell(1).value,  // 地震地点
+                          timestamp: row.getCell(2).value,  // 标注时间
+                          drawtype: row.getCell(3).value,  // 标注种类(点/线)
+                          pointtype: row.getCell(4).value,  // 标注类型-可通行铁路
+                          latitude: row.getCell(5).value,
+                          longitude: row.getCell(6).value,
+                          height: row.getCell(7).value,
+                          lineSection: row.getCell(8).value,  // 线路段
+                          pointname: row.getCell(9).value,  // 标注名称
+                          pointdescribe: row.getCell(10).value,  // 标注说明
+                      };
+                      data.push(rowData);
+                  }
+              });
+              this.tableData1 = data; // 更新表格数据
+              console.log("data:",data)
+              let flag = this.checkData(data);
+              console.log("flag-", flag);
+              if (flag) {
+                  await this.addUpload(data);
+              } else {
+                  await this.$alert('请注意Excel填写规范', '导入失败', {
+                      confirmButtonText: '确定',
+                      type: 'warning',
+                      callback: action => {}
+                  });
+              }
+
+          };
+          reader.readAsArrayBuffer(this.selectedFile);
+      },
+
+      checkData(data){
+          let regex = /^段\d+$/
+          let flag = true
+          let count = 0
+          data.forEach((item,index) => {
+              // 不为空字段
+              if(item.eqPosition === null || item.drawtype === null
+                  || item.latitude === null || item.longitude === null){
+                  console.log(444,"--",index)
+                  flag = false
+              }
+              // 必选'点'或'线'的字段
+              if(item.drawtype !== '点' && item.drawtype !== '线'){
+                  console.log(555,"--",index)
+                  flag = false
+              }
+              // 选'线'则线路段不能为空
+              if(item.drawtype === '线' && item.lineSection === null){
+                  console.log(666,"--",index)
+                  flag = false
+              }
+              if(item.drawtype === '线' && item.lineSection !== null){
+                  if(regex.test(item.lineSection)){
+                      let num = parseInt(item.lineSection.slice(-1))
+                      let num1 = data[index + 1] ? parseInt(data[index + 1].lineSection?.slice(-1)) : null;
+                      let pointType1 = data[index + 1] ? data[index + 1]?.pointtype : null
+                      if(pointType1 === null){
+                          if(num === 1){
+                              flag = false
+                          }
+                      }else{
+                          if(item.pointtype === pointType1){
+                              if(num1 !== 1 && num !== (num1 -1)){
+                                  flag = false
+                              }
+                          }else{
+                              if(num1 !== 1){
+                                  flag = false
+                              }
+                          }
+                          if(count === (num - 1)){
+                              if(num1 === 1){
+                                  count = 0
+                              }else{
+                                  count++
+                              }
+                          }else{
+                              flag = false
+                          }
+                      }
+                  }
+              }
+              if(item.drawtype === '点'){
+                  flag = true
+              }
+          })
+          if(flag) return true
+          else return false
+      },
+
+      addUploadPoint(type, img, eqid, pointInfo){
+          cesiumPlot.initPointHandler(type, img, eqid)
+          cesiumPlot.drawPoint(pointInfo)
+          // console.log("pointInfo:",pointInfo)
+          let data = JSON.stringify({type: "point", operate: "add", data: pointInfo})
+          // console.log("data:",data)
+          this.websock.send(data)
+      },
+
+      addUpload(data){
+          let Obj = {
+              eqid: "",
+              id: "",
+              img: "",
+              position: [],
+              type: ""
+          }
+          data.forEach((item,index) => {
+              let eqid = this.getEqData.filter((ele) => ele.position === item.eqPosition)[0].eqid
+              let currentDate = new Date();
+              if(item.drawtype === '点'){
+                  this.plotPicture.forEach((item1) => {
+                      if(item.pointtype === item1.name){
+                          let obj = {
+                              name: item.pointname,
+                              lat: item.latitude,
+                              lon: item.longitude,
+                              type: 'point',
+                              time: item.timestamp,
+                              img: item1.img,
+                              height: item.height,
+                              describe: item.pointdescribe,
+                              id: currentDate.getTime(),
+                              eqid: eqid
+                          }
+                          this.uploadPointData.push(obj)
+                          this.addUploadPoint(obj.type, obj.img, obj.eqid, obj)
+                      }
+                  })
+              }else if(item.drawtype === '线'){
+                  let num = parseInt(item.lineSection.slice(-1))
+                  let num1 = data[index + 1] ? parseInt(data[index + 1].lineSection?.slice(-1)) : null;
+                  if(item.lineSection === '段1'){
+                      Obj.eqid = eqid
+                      Obj.id = currentDate.getTime() + index + "polyline"
+                      Obj.img = this.plotPicture.filter((ele) => ele.name === item.pointtype)[0].img
+                      Obj.type = item.pointtype
+                      Obj.position = []
+                      let position = Cesium.Cartesian3.fromDegrees(item.longitude, item.latitude, item.height);
+                      Obj.position.push(position)
+                  }else{
+                      let position = Cesium.Cartesian3.fromDegrees(item.longitude, item.latitude, item.height);
+                      Obj.position.push(position)
+                  }
+                  if(index === (data.length - 1) || num !== (num1 - 1)){
+                      this.uploadLineData.push({...Obj})
+                  }
+              }
+          })
+          console.log("this.uploadLineData--",this.uploadLineData)
+          this.uploadLineData.forEach((item) => {
+              cesiumPlot.drawActivatePolyline(item.type,item.img,item.eqid,item)
+          })
+
+          this.finishUploadLine = true
+      },
+      downloadTemplate() {
+          const link = document.createElement('a');
+          link.href = `/标绘数据模板表.xlsx`;  // 替换成你的Excel文件名
+          link.download = '标绘数据模板表.xlsx';
+          link.click();
+      }
   }
 }
 </script>
 
 <style>
-.cesium-viewer-navigationContainer {
-  display: none !important;
-}
+    .cesium-viewer-navigationContainer {
+        display: none !important;
+    }
 
-.el-tree {
-  background: rgb(38 36 36) !important;
-  color: #ffffff !important;
-}
+    .el-tree {
+        background: rgb(38 36 36) !important;
+        color: #ffffff !important;
+    }
 
-.el-tree-node__content:hover {
-  background-color: rgb(38 36 36) !important;
-}
+    .el-tree-node__content:hover {
+        background-color: rgb(38 36 36) !important;
+    }
 
-.el-tree-node:focus > .el-tree-node__content {
-  background-color: rgb(38 36 36) !important;
-}
+    .el-tree-node:focus > .el-tree-node__content {
+        background-color: rgb(38 36 36) !important;
+    }
 
-.plotTreeItem {
-  margin: 3px;
-}
+    .plotTreeItem {
+        margin: 3px;
+    }
 
-.plottreetooltip {
-  margin: 4px;
-}
+    .plottreetooltip {
+        margin: 4px;
+    }
 
-#cesiumContainer {
-  height: 100%;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-}
+    #cesiumContainer {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
 
-.markCollection {
-  position: absolute;
-  padding: 10px;
-  top: 630px;
-  left: 10px;
-  background-color: rgba(40, 40, 40, 0.7);
-  z-index: 10; /* 更高的层级 */
-}
+    .markCollection {
+        position: absolute;
+        padding: 10px;
+        top: 630px;
+        left: 10px;
+        background-color: rgba(40, 40, 40, 0.7);
+        z-index: 10; /* 更高的层级 */
+    }
 
-.markCollection span {
-  margin: 5px;
-  width: 30px;
-  height: 30px;
-}
+    .markCollection span {
+        margin: 5px;
+        width: 30px;
+        height: 30px;
+    }
 
-.markCollection span:hover {
-  cursor: pointer;
-}
+    .markCollection span:hover {
+        cursor: pointer;
+    }
 
-.eqTable {
-  width: 500px;
-  position: absolute;
-  padding: 10px;
-  border-radius: 5px;
-  top: 10px;
-  left: 10px;
-  z-index: 10; /* 更高的层级 */
-  background-color: rgba(40, 40, 40, 0.7);
-}
+    .eqTable {
+        width: 500px;
+        position: absolute;
+        padding: 10px;
+        border-radius: 5px;
+        top: 10px;
+        left: 10px;
+        z-index: 10; /* 更高的层级 */
+        background-color: rgba(40, 40, 40, 0.7);
+    }
 
-.noteContainer {
-  position: absolute;
-  padding: 10px;
-  border-radius: 5px;
-  top: 390px;
-  left: 10px;
-  width: 500px;
-  z-index: 10;
-  background-color: rgba(40, 40, 40, 0.7);
-}
+    .noteContainer {
+        position: absolute;
+        padding: 10px;
+        border-radius: 5px;
+        top: 345px;
+        left: 10px;
+        width: 500px;
+        z-index: 10;
+        background-color: rgba(40, 40, 40, 0.7);
+    }
 
-.tool-container {
-  position: absolute;
-  padding: 10px;
-  border-radius: 5px;
-  width: 500px;
-  top: 90px;
-  left: 10px;
-  z-index: 10; /* 更高的层级 */
-  background-color: rgba(40, 40, 40, 0.7);
-}
+    .tool-container {
+        position: absolute;
+        padding: 10px;
+        border-radius: 5px;
+        width: 500px;
+        top: 90px;
+        left: 10px;
+        z-index: 10; /* 更高的层级 */
+        background-color: rgba(40, 40, 40, 0.7);
+    }
 
-.button-container {
-  width: 500px;
-  position: absolute;
-  padding: 10px;
-  border-radius: 5px;
-  top: 10px;
-  left: 10px;
-  z-index: 10; /* 更高的层级 */
-  background-color: rgba(40, 40, 40, 0.7);
-}
+    .button-container {
+        width: 500px;
+        position: absolute;
+        padding: 10px;
+        border-radius: 5px;
+        top: 10px;
+        left: 10px;
+        z-index: 10; /* 更高的层级 */
+        background-color: rgba(40, 40, 40, 0.7);
+    }
 
-.latlon-legend {
-  pointer-events: auto;
-  position: absolute;
-  border-radius: 15px;
-  padding-left: 5px;
-  padding-right: 5px;
-  bottom: 30px;
-  height: 30px;
-  width: 125px;
-  box-sizing: content-box;
-}
+    .latlon-legend {
+        pointer-events: auto;
+        position: absolute;
+        border-radius: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        bottom: 30px;
+        height: 30px;
+        width: 125px;
+        box-sizing: content-box;
+    }
 
-.modelAdj {
-  color: white;
-  margin-bottom: 5px;
-}
+    .modelAdj {
+        color: white;
+        margin-bottom: 5px;
+    }
 </style>
