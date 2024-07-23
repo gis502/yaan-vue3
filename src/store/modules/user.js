@@ -52,6 +52,9 @@ const useUserStore = defineStore(
           })
         })
       },
+      getName(){
+        username
+      },
       // 退出系统
       logOut() {
         return new Promise((resolve, reject) => {

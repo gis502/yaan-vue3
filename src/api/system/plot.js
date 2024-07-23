@@ -41,6 +41,59 @@ export function getPlotIcon(query) {
   })
 }
 
+//-------------------------------------------------------------
+export function insertPlotAndInfo(data){
+  return request({
+    url: '/system/ploy/insertplotandinfo',
+    method: 'post',
+    data: data
+  })
+}
 
+export function getPlot(query) {
+  return request({
+    url: '/system/ploy/getplot',
+    method: 'get',
+    params: query
+  })
+}
 
+export function getPlotInfos(query) {
+  return request({
+    url: '/system/ploy/getplotinfos',
+    method: 'get',
+    params: query
+  })
+}
 
+export function addPlotInfo(data){
+  return request({
+    url: '/system/ploy/addplotinfo',
+    method: 'post',
+    data: data
+  })
+}
+
+export function deletePlotAndInfo(query) {
+  return request({
+    url: '/system/ploy/deleteplotandinfo',
+    method: 'get',
+    params: query
+  })
+}
+
+export function deletePlotInfo(query) {
+  return request({
+    url: '/system/ploy/deleteplotinfo',
+    method: 'get',
+    params: query
+  })
+}
+
+export function updataPlotInfo(data){
+  return request({
+    url: '/system/ploy/updataplotinfo',
+    method: 'post',
+    data: data
+  })
+}
