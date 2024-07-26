@@ -3,15 +3,15 @@
 <!--    box包裹地图，截图需要-->
   <div id="box" ref="box">
     <div id="cesiumContainer">
-      <div class="legend">
-        <img src="../../assets/images/TimeLine/legend.png" style="width: 23%;height: 23%">
-      </div>
+<!--      <div class="legend">-->
+<!--        <img src="../../assets/images/TimeLine/legend.png" style="width: 23%;height: 23%">-->
+<!--      </div>-->
       <!--          面板信息-->
-      <commonPanelOnlyShow
-          :visible="popupVisible"
-          :position="popupPosition"
-          :popupData="popupData"
-      />
+     <commonPanelTimeLine
+         :visible="popupVisible"
+         :position="popupPosition"
+        :popupData="popupData"
+    />
     </div>
   </div>
 <!-- 进度条-->
@@ -32,7 +32,7 @@
         <span class="timelabel">{{ this.formatTime(this.currentTime) }}</span>
       </div>
       <div class="end-time-info">
-        <div class="timelabel">{{this.formatTime(this.endTime)}}</div>
+        <div class="timelabel">{{this.formatTime(this.eqendTime)}}</div>
       </div>
 
     </div>
@@ -49,13 +49,10 @@
 <script>
 import * as Cesium from 'cesium'
 import 'cesium/Source/Widgets/widgets.css'
-
 import {initCesium} from '@/cesium/tool/initCesium.js'
 import CesiumNavigation from "cesium-navigation-es6";
-
 import {getEqbyId} from '@/api/system/eqlist'
-
-import {getPloy} from '@/api/system/plot'
+import {getPlotwithStartandEndTime} from '@/api/system/plot'
 import geojsonmap from '@/assets/geoJson/map.json'
 
 //报告产出
@@ -63,13 +60,12 @@ import jsPDF from "jspdf";
 import "@/assets/json/TimeLine/SimHei-normal.js";
 import html2canvas from "html2canvas";
 // import canvas2image from 'canvas2image';
-import commonPanelOnlyShow from "@/components/Cesium/CommonPanelOnlyShow.vue";
+// import commonPanelOnlyShow from "@/components/Cesium/CommonPanelOnlyShow.vue";
+import commonPanelTimeLine from "@/components/Cesium/CommonPanelTimeLine.vue";
 
-
-import centerstar from "@/assets/images/TimeLine/震中.png"
 export default {
   components: {
-    commonPanelOnlyShow
+    commonPanelTimeLine
   },
 
   data: function () {
@@ -86,20 +82,21 @@ export default {
       viewer:'',
       store:'',
 
-
       currentTimePosition: 0,
       currentNodeIndex:1,
       intervalId: null,
       eqid:'',
 
       //时间轴时间
-      startTime:'',
+      eqstartTime:'',
       currentTime: '',
-      endTime:'',
+      eqendTime:'',
 
 
-      drawdata:[],
       centerPoint:null,
+      //用于记录是否是第一次加载点，false表示还没有加载
+      plotisshow:{},
+      plots:[],
     };
   },
 
@@ -110,12 +107,7 @@ export default {
   mounted() {
     this.viewer = window.viewer
     this.store = this.$store
-
     this.getEqInfo(this.eqid)
-
-    this.getPlot(this.eqid)
-    // this.startTimer();
-
   },
   beforeDestroy() {
     this.stopTimer();
@@ -136,24 +128,32 @@ export default {
       dateString = dateString.replace(/年|月/g, '-').replace(/日|时|分|秒/g, ' ');
       return dateString
     },
-
-    getPlot(eqid) {
-      getPloy({id: eqid}).then(res => {
-        this.drawdata = res
-        console.log(res)
-      })
-    },
     //取地震信息+开始结束当前时间初始化
     getEqInfo(eqid){
+      // this.getPlot(eqid)
       getEqbyId({eqid:eqid}).then(res => {
         // console.log(res)
         this.centerPoint=res
-        this.startTime=new Date(res.time)
+        this.centerPoint.id="center"
+        this.eqstartTime=new Date(res.time)
         // 计算结束时间 结束时间为开始后72小时，单位为毫秒
-        this.endTime = new Date(this.startTime.getTime() + (72 * 60 * 60 * 1000));
-        this.currentTime=this.startTime
+        this.eqendTime = new Date(this.eqstartTime.getTime() + (72 * 60 * 60 * 1000));
+        this.currentTime=this.eqstartTime
+        this.getPlotwithStartandEndTime(this.eqid)
+      })
+    },
 
-        this.init(eqid)
+    getPlotwithStartandEndTime(eqid){
+      // console.log("function getAllPlotInfo")
+      getPlotwithStartandEndTime({eqid: eqid}).then(res => {
+        this.plots = res
+        console.log(res)
+            res.forEach(item => {
+              this.plotisshow[item.plotid]=0
+            })
+        // this.getPlot(this.eqid)
+        // console.log(this.plotisshow)
+        this.init(this.eqid)
       })
     },
 
@@ -207,137 +207,124 @@ export default {
       this.entitiesClickPonpHandler()
       this.watchTerrainProviderChanged()
       //开启时间轴
-      this.startTimer();
-
+      this.startTimerLine();
     },
 
-
     //时间轴变换
-    startTimer() {
+    startTimerLine() {
       //归零
       viewer.entities.removeAll();
       this.currentNodeIndex=0;
-      this.currentTime=this.startTime;
+      this.currentTime=this.eqstartTime;
       this.currentTimePosition=0;
 
-      //加载中心点
-      viewer.entities.add({
-        properties: {
-          type: "震中",
-          time: this.centerPoint.time,
-          name: this.centerPoint.position,
-          lat: this.centerPoint.latitude,
-          lon: this.centerPoint.longitude,
-          describe: this.centerPoint.position,
-        },
-        position: Cesium.Cartesian3.fromDegrees(
-            parseFloat(this.centerPoint.longitude),
-            parseFloat(this.centerPoint.latitude),
-            parseFloat(this.centerPoint.height || 0)
-        ),
-        billboard: {
-          image: centerstar,
-          width: 50,
-          height: 50,
-        },
-        label: {
-          text: this.centerPoint.position,
-          show: true,
-          font: '14px sans-serif',
-          fillColor:Cesium.Color.RED,        //字体颜色
-          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-          outlineWidth: 2,
-          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-          pixelOffset: new Cesium.Cartesian2(0, -16),
-        },
-      });
       //时间轴开始
       this.intervalId = setInterval(() => {
         this.updateCurrentTime();
       }, 160);
     },
+
     stopTimer() {
       clearInterval(this.intervalId);
     },
     updateCurrentTime() {
       //当前往前一步等于真实世界20分钟;6步等于1s; (1s等于2小时)
-      // this.currentNodeIndex=(this.currentNodeIndex+1)%216
-      // let tmp=100.0/216.0
+      this.currentNodeIndex=(this.currentNodeIndex+1)%216
+      let tmp=100.0/216.0
       // // 当前往前一步等于真实世界10分钟 600s ;6步等于1s; (1s等于1小时)=60分钟
       // this.currentNodeIndex=(this.currentNodeIndex+1)%432
       // let tmp=100.0/432.0
-      // 当前往前一步等于真实世界5分钟 300s ;6步等于1s; (1s等于0.5小时)=30分钟
-      this.currentNodeIndex=(this.currentNodeIndex+1)%864
-      let tmp=100.0/864.0
+      // // 当前往前一步等于真实世界5分钟 300s ;6步等于1s; (1s等于0.5小时)=30分钟
+      // this.currentNodeIndex=(this.currentNodeIndex+1)%864
+      // let tmp=100.0/864.0
       this.currentTimePosition +=tmp;
+
       if (this.currentTimePosition >= 100) {
         this.currentTimePosition = 100;
-        this.currentTime=this.endTime
-        // this.stopTimer();
-        this.startTimer();
+        this.currentTime=this.eqendTime
+        this.stopTimer();
       }
       else{
         this.currentTimePosition=this.currentTimePosition%100
         // 当前往前一步等于真实世界20分钟(1s等于2小时)
-        // this.currentTime = new Date(this.startTime.getTime()+ this.currentNodeIndex * 20 * 60 * 1000);
+        this.currentTime = new Date(this.eqstartTime.getTime()+ this.currentNodeIndex * 20 * 60* 1000);
         // 当前往前一步等于真实世界10分钟(1s等于1小时)
         // this.currentTime = new Date(this.startTime.getTime()+ this.currentNodeIndex * 10 * 60 * 1000);
         // 当前往前一步等于真实世界5分钟 300s ;6步等于1s; (1s等于0.5小时)=30分钟
-        this.currentTime = new Date(this.startTime.getTime()+ this.currentNodeIndex * 5 * 60 * 1000);
-        // this.updatePlot(this.currentNodeIndex)
+        // this.currentTime = new Date(this.startTime.getTime()+ this.currentNodeIndex * 5 * 60 * 1000);
+      //   // this.updatePlot(this.currentNodeIndex)
         this.updatePlot()
       }
     },
 
-    // updatePlot(currentNodeIndex) {
     updatePlot() {
-      let pointArr =  this.drawdata.filter(e => e.drawtype === 'point')
-      // let _this=this
-      // const startTimestamp = new Date(this.startTime);
+      //添加
+      let pointArr =  this.plots.filter(e => e.drawtype === 'point')
+
         pointArr.forEach(item => {
-          // console.log(item)
-          const itemTimestamp = new Date(item.timestamp);
-          // const startTimestamp = new Date(this.startTime);
-          // const diffInMilliseconds = itemTimestamp.getTime() - startTimestamp.getTime();
-          // const diffInMinutes = Math.floor(diffInMilliseconds / (1000 * 60));
-          if (itemTimestamp <= this.currentTime) {
-            // console.log(item);
-            viewer.entities.add({
-              properties: {
-                type: item.pointtype,
-                time: item.timestamp,
-                name: item.pointname,
-                lat: item.latitude,
-                lon: item.longitude,
-                describe: item.pointdescribe,
-              },
-              position: Cesium.Cartesian3.fromDegrees(
-                parseFloat(item.longitude),
-                parseFloat(item.latitude),
-                parseFloat(item.height || 0)
-              ),
-              billboard: {
-                image: item.img,
-                width: 50,
-                height: 50,
-              },
-              label: {
-                text: item.pointname,
-                show: true,
-                font: '14px sans-serif',
-                style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-                outlineWidth: 2,
-                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-                pixelOffset: new Cesium.Cartesian2(0, -16),
-              },
-              id: item.drawid,
-            });
+          const currentDate = new Date(this.currentTime);
+          // 将 this.timestampToTime(item.starttime) 转换为 Date 对象
+          const startDate = new Date(this.timestampToTime(parseInt(item.starttime)));
+          const endDate = new Date(this.timestampToTime(parseInt(item.endtime)));
+          // console.log(endDate,currentDate)
+          if((startDate<=currentDate) && (this.plotisshow[item.plotid]==0)){
+              this.plotisshow[item.plotid]=1
+              viewer.entities.add({
+                // properties: {
+                //   id: item.plotid,
+                //   // type: item.drawtype,
+                //   // // time: item.timestamp,
+                //   // // name: item.pointname,
+                //   // lat: item.latitude,
+                //   // lon: item.longitude,
+                //   // describe: item.pointdescribe,
+                // },
+                position: Cesium.Cartesian3.fromDegrees(
+                    parseFloat(item.longitude),
+                    parseFloat(item.latitude),
+                    parseFloat(item.height || 0)
+                ),
+                billboard: {
+                  image: item.img,
+                  width: 50,
+                  height: 50,
+                },
+                // label: {
+                //   // text: item.pointname,
+                //   show: true,
+                //   font: '14px sans-serif',
+                //   style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                //   outlineWidth: 2,
+                //   verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                //   pixelOffset: new Cesium.Cartesian2(0, -16),
+                // },
+                plotid: item.plotid,
+                plottype:item.plottype,
+              });
+            }
+          if(endDate<=currentDate && this.plotisshow[item.plotid]==1){
+            this.plotisshow[item.plotid]=2
+            // console.log(item.plotid,"end")
+            viewer.entities.removeById(item.plotid)
           }
         });
-        // let polylineArr = data.filter(e => e.drawtype === 'polyline')
-        // cesiumPlot.getDrawPolyline(polylineArr)
-        // let polygonArr = data.filter(e => e.drawtype === 'polygon')
-        // cesiumPlot.getDrawPolygon(polygonArr)
+    },
+    timestampToTime(timestamp) {
+      let DateObj = new Date(timestamp)
+      // 将时间转换为 XX年XX月XX日XX时XX分XX秒格式
+      let year = DateObj.getFullYear()
+      let month = DateObj.getMonth() + 1
+      let day = DateObj.getDate()
+      let hh = DateObj.getHours()
+      let mm = DateObj.getMinutes()
+      let ss = DateObj.getSeconds()
+      month = month > 9 ? month : '0' + month
+      day = day > 9 ? day : '0' + day
+      hh = hh > 9 ? hh : '0' + hh
+      mm = mm > 9 ? mm : '0' + mm
+      ss = ss > 9 ? ss : '0' + ss
+      // return `${year}年${month}月${day}日${hh}时${mm}分${ss}秒`
+      return `${year}-${month}-${day} ${hh}:${mm}:${ss}`
     },
     //---------------------信息面板----------------------------
     isTerrainLoaded() {
@@ -425,16 +412,13 @@ export default {
             that.selectedEntityHighDiy = Cesium.Cartesian3.fromDegrees(Number(longitude.toFixed(6)), Number(latitude.toFixed(6)), height);
             // console.log("虚拟位置",{longitude, latitude, height},"真实位置",{lon,lat,hei})
           }
+
           // 2-5 更新弹窗位置
           // that.selectedEntity = window.selectedEntity
-          // console.log(window.selectedEntity)
+          // console.log("window.selectedEntity",window.selectedEntity)
           that.popupData = {
-            type: window.selectedEntity.properties.type.getValue(),
-            time: window.selectedEntity.properties.time.getValue(),
-            name: window.selectedEntity.properties.name.getValue(),
-            lon: window.selectedEntity.properties.lon.getValue(),
-            lat: window.selectedEntity.properties.lat.getValue(),
-            describe: window.selectedEntity.properties.describe.getValue(),
+            plotid:window.selectedEntity.plotid,
+            plotname:window.selectedEntity.plottype,
           };
           this.popupVisible = true; // 显示弹窗
           this.updatePopupPosition(); // 更新弹窗的位置
@@ -616,9 +600,4 @@ export default {
   background-color: #2eeeff;
   border-radius: 50%;
 }
-
-
-
-
-
 </style>

@@ -97,3 +97,11 @@ export function updataPlotInfo(data){
     data: data
   })
 }
+
+export function getPlotwithStartandEndTime(data){
+  return request({
+    url: '/system/ploy/getplotswithtime' ,
+    method: 'post',
+    params:data
+  })
+}
