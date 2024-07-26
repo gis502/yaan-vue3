@@ -25,7 +25,7 @@
 </template>
 
 <script>
-import {getAllEq, deleteeq} from '@/api/system/eqlist'
+import {getAllEq, deleteeq} from '@/api/system/eqlist.js'
 
 export default {
   name: "timelineeqlist",
