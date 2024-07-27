@@ -62,7 +62,7 @@ import html2canvas from "html2canvas";
 // import canvas2image from 'canvas2image';
 // import commonPanelOnlyShow from "@/components/Cesium/CommonPanelOnlyShow.vue";
 import commonPanelTimeLine from "@/components/Cesium/CommonPanelTimeLine.vue";
-
+import centerstar from "@/assets/images/TimeLine/震中.png"
 export default {
   components: {
     commonPanelTimeLine
@@ -134,10 +134,10 @@ export default {
       getEqbyId({eqid:eqid}).then(res => {
         // console.log(res)
         this.centerPoint=res
-        this.centerPoint.id="center"
+        this.centerPoint.plotid="center"
         this.eqstartTime=new Date(res.time)
         // 计算结束时间 结束时间为开始后72小时，单位为毫秒
-        this.eqendTime = new Date(this.eqstartTime.getTime() + (72 * 60 * 60 * 1000));
+        this.eqendTime = new Date(this.eqstartTime.getTime() + (7*24 * 60 * 60 * 1000));
         this.currentTime=this.eqstartTime
         this.getPlotwithStartandEndTime(this.eqid)
       })
@@ -203,6 +203,7 @@ export default {
           })
       );
 
+
     // 生成实体点击事件的handler
       this.entitiesClickPonpHandler()
       this.watchTerrainProviderChanged()
@@ -217,7 +218,39 @@ export default {
       this.currentNodeIndex=0;
       this.currentTime=this.eqstartTime;
       this.currentTimePosition=0;
-
+//加载中心点
+      viewer.entities.add({
+        // properties: {
+        //   type: "震中",
+        //   time: this.centerPoint.time,
+        //   name: this.centerPoint.position,
+        //   lat: this.centerPoint.latitude,
+        //   lon: this.centerPoint.longitude,
+        //   describe: this.centerPoint.position,
+        // },
+        position: Cesium.Cartesian3.fromDegrees(
+            parseFloat(this.centerPoint.longitude),
+            parseFloat(this.centerPoint.latitude),
+            parseFloat(this.centerPoint.height || 0)
+        ),
+        billboard: {
+          image: centerstar,
+          width: 50,
+          height: 50,
+        },
+        label: {
+          text: this.centerPoint.position,
+          show: true,
+          font: '14px sans-serif',
+          fillColor:Cesium.Color.RED,        //字体颜色
+          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+          outlineWidth: 2,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          pixelOffset: new Cesium.Cartesian2(0, -16),
+        },
+        plotid:this.centerPoint.plotid,
+        plottype:"震中",
+      });
       //时间轴开始
       this.intervalId = setInterval(() => {
         this.updateCurrentTime();
@@ -229,14 +262,10 @@ export default {
     },
     updateCurrentTime() {
       //当前往前一步等于真实世界20分钟;6步等于1s; (1s等于2小时)
-      this.currentNodeIndex=(this.currentNodeIndex+1)%216
-      let tmp=100.0/216.0
-      // // 当前往前一步等于真实世界10分钟 600s ;6步等于1s; (1s等于1小时)=60分钟
-      // this.currentNodeIndex=(this.currentNodeIndex+1)%432
-      // let tmp=100.0/432.0
-      // // 当前往前一步等于真实世界5分钟 300s ;6步等于1s; (1s等于0.5小时)=30分钟
-      // this.currentNodeIndex=(this.currentNodeIndex+1)%864
-      // let tmp=100.0/864.0
+      // this.currentNodeIndex=(this.currentNodeIndex+1)%216
+      // let tmp=100.0/216.0
+      this.currentNodeIndex=(this.currentNodeIndex+1)%672  //共前进720次
+      let tmp=100.0/672.0  //进度条每次前进
       this.currentTimePosition +=tmp;
 
       if (this.currentTimePosition >= 100) {
@@ -247,12 +276,9 @@ export default {
       else{
         this.currentTimePosition=this.currentTimePosition%100
         // 当前往前一步等于真实世界20分钟(1s等于2小时)
-        this.currentTime = new Date(this.eqstartTime.getTime()+ this.currentNodeIndex * 20 * 60* 1000);
-        // 当前往前一步等于真实世界10分钟(1s等于1小时)
-        // this.currentTime = new Date(this.startTime.getTime()+ this.currentNodeIndex * 10 * 60 * 1000);
-        // 当前往前一步等于真实世界5分钟 300s ;6步等于1s; (1s等于0.5小时)=30分钟
-        // this.currentTime = new Date(this.startTime.getTime()+ this.currentNodeIndex * 5 * 60 * 1000);
-      //   // this.updatePlot(this.currentNodeIndex)
+        // this.currentTime = new Date(this.eqstartTime.getTime()+ this.currentNodeIndex * 20 * 60* 1000);
+        //每次15分钟
+        this.currentTime = new Date(this.eqstartTime.getTime()+ this.currentNodeIndex * 12 * 60* 1000);
         this.updatePlot()
       }
     },
@@ -419,6 +445,8 @@ export default {
           that.popupData = {
             plotid:window.selectedEntity.plotid,
             plotname:window.selectedEntity.plottype,
+            // eqid:that.eqid
+            centerPoint:that.centerPoint
           };
           this.popupVisible = true; // 显示弹窗
           this.updatePopupPosition(); // 更新弹窗的位置
