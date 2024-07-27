@@ -67,7 +67,6 @@
     </el-form>
     <addMarkCollectionDialog
         :addMarkDialogFormVisible="addMarkDialogFormVisible"
-        :pointInfo.sync="pointInfo"
         @wsSendPoint="wsSendPoint"
         @drawPoint="drawPoint"
         @clearMarkDialogForm="resetAddMarkCollection"
@@ -88,13 +87,12 @@ import * as Cesium from 'cesium'
 import CesiumNavigation from "cesium-navigation-es6";
 import {ElMessage} from 'element-plus'
 import {initCesium} from '@/cesium/tool/initCesium.js'
-import {getPloy, getPlotIcon} from '@/api/system/plot'
+import {getPlot, getPlotIcon} from '@/api/system/plot'
 import {getAllEq} from '@/api/system/eqlist'
 import {initWebSocket} from '@/cesium/WS.js'
 import cesiumPlot from '@/cesium/plot/cesiumPlot'
 import addMarkCollectionDialog from "@/components/Cesium/addMarkCollectionDialog"
 import commonPanel from "@/components/Cesium/CommonPanel";
-import {mapState} from "pinia";
 import {useCesiumStore} from '@/store/modules/cesium.js'
 
 export default {
@@ -107,7 +105,6 @@ export default {
       typeList: null,// 点标注控件根据此数据生成
       refenceTypeList: null,//用来对照弹窗中类型的中文
       message: null, // 添加点标绘的时候的弹窗相关
-      pointInfo: null,
       addMarkDialogFormVisible: false, // 标绘信息填写对话框的显示和隐藏
       showMarkCollection: false, // 点标绘控件的显示和隐藏
       openAddStatus: true, // 用来控制添加billboard按钮的状态，点一次后只有添加完点才能再点击
@@ -164,14 +161,6 @@ export default {
         },
         {
           label: '量算工具',
-          // children: [
-          //   {
-          //     label: '距离量算',
-          //   },
-          //   {
-          //     label: '面积量算',
-          //   }
-          // ]
         }
       ],
       defaultProps: {
@@ -239,29 +228,25 @@ export default {
       // this.websock.wsAdd = this.wsAdd()
     },
     // 获取本次地震数据库中的数据渲染到地图上
-    initPlot(drawId) {
+    initPlot(eqid) {
       let that = this
-      getPloy({id: drawId}).then(res => {
+      getPlot({eqid}).then(res=>{
         let data = res
         let pointArr = data.filter(e => e.drawtype === 'point')
         pointArr.forEach(item => {
           let point = {
-            lat: item.latitude,
-            lon: item.longitude,
+            eqid:item.eqid,
+            plotid:item.plotid,
+            time: item.time,
+            plottype:item.plottype,
+            drawtype:item.drawtype,
+            latitude: item.latitude,
+            longitude: item.longitude,
             height: item.height,
             img: item.img,
-            type: item.pointtype,
-            id: item.drawid,
-            time: item.timestamp,
-            name: item.pointname,
-            describe: item.pointdescribe,
           }
           that.drawPoint(point)
         })
-        let polylineArr = data.filter(e => e.drawtype === 'polyline')
-        cesiumPlot.getDrawPolyline(polylineArr)
-        let polygonArr = data.filter(e => e.drawtype === 'polygon')
-        cesiumPlot.getDrawPolygon(polygonArr)
       })
     },
     // 所有entity实体类型点击事件的handler（billboard、polyline、polygon）
@@ -304,17 +289,17 @@ export default {
           }
           // 2-5 更新弹窗位置
           // that.selectedEntity = window.selectedEntity
-          that.popupData = {
-            type: window.selectedEntity.properties.type?window.selectedEntity.properties.type.getValue():"",
-            time: window.selectedEntity.properties.time?window.selectedEntity.properties.time.getValue():"",
-            name: window.selectedEntity.properties.name?window.selectedEntity.properties.name.getValue():"",
-            lon: window.selectedEntity.properties.lon?window.selectedEntity.properties.lon.getValue():"",
-            lat: window.selectedEntity.properties.lat?window.selectedEntity.properties.lat.getValue():"",
-            describe: window.selectedEntity.properties.describe?window.selectedEntity.properties.describe.getValue():"",
-          };
+          // that.popupData = {
+          //   type: window.selectedEntity.properties.type?window.selectedEntity.properties.type.getValue():"",
+          //   time: window.selectedEntity.properties.time?window.selectedEntity.properties.time.getValue():"",
+          //   name: window.selectedEntity.properties.name?window.selectedEntity.properties.name.getValue():"",
+          //   lon: window.selectedEntity.properties.lon?window.selectedEntity.properties.lon.getValue():"",
+          //   lat: window.selectedEntity.properties.lat?window.selectedEntity.properties.lat.getValue():"",
+          //   describe: window.selectedEntity.properties.describe?window.selectedEntity.properties.describe.getValue():"",
+          // };
+          this.popupData = window.selectedEntity.properties.data ? window.selectedEntity.properties.data.getValue():""
           this.popupVisible = true; // 显示弹窗
           this.updatePopupPosition(); // 更新弹窗的位置
-
         } else {
           this.popupVisible = false; // 隐藏弹窗
         }
@@ -396,11 +381,11 @@ export default {
     },
     tableHeaderColor() {
       return {
-        'border-color': '#313a44',
-        'background-color': '#313a44',
+        'border-color': '#293038',
+        'background-color': '#293038 !important', // 此处是elemnetPlus的奇怪bug，header-cell-style中背景颜色不加!important不生效
         'color': '#fff',
         'padding': '0',
-        'text-align': 'center'
+        'text-align': 'center',
       }
     },
     // 修改table header的背景色
@@ -491,7 +476,6 @@ export default {
         cesiumPlot.initPointHandler(type, img, this.eqid).then(res => {
           that.addMarkDialogFormVisible = true
           this.message.close(that.addMarkDialogFormVisible)
-          that.pointInfo = cesiumStore.getPointInfo1()
         })
       }
     },
@@ -507,11 +491,9 @@ export default {
         cesiumStore.clearData()
         resolve()
       }).then(res => {
-        // 2-1 清空form给下一次添加点标绘用
-        this.pointInfo = null
-        // 3-1 更改添加点标绘按钮状态使其可以点击
+        // 2-1 更改添加点标绘按钮状态使其可以点击
         this.openAddStatus = !this.openAddStatus
-        // 4-1 关闭弹窗
+        // 3-1 关闭弹窗
         this.addMarkDialogFormVisible = !this.addMarkDialogFormVisible
       })
     },
