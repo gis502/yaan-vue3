@@ -110,6 +110,7 @@
 <script>
 import {plotType} from '@/cesium/plot/plotType.js'
 import {getPlotInfos} from '@/api/system/plot.js'
+import {getEqbyId} from "@/api/system/eqlist.js";
 export default {
   data() {
     return {
@@ -139,8 +140,26 @@ export default {
         // 在执行顺序上，visible比popupData快。导致在判断this.popupPanelData.plottype === plotType[item].name时，
         // popupPanelData是空，判断一定时false，造成第一次点击弹窗无法渲染对应标绘的html模板。
         // 可能时因为开启深度监听的原因（deep: true）。
+        console.log(this.popupPanelData)
         if (this.visiblePanel) {
-          this.getPlotInfo(this.popupPanelData.plotid)
+          this.plotInfoActivities = []
+          if(this.popupPanelData.plotid=="center"){
+            // console.log("111111111111111111111111")
+            let item = {
+              starttime: this.popupPanelData.centerPoint.time,
+              endtime: null,
+              info: null,
+              id: "centerinfo",
+              aditStatus: true,
+            }
+            let infostr = `{"name":"震中","position":{"type":"text","name":"位置","value":"${this.popupPanelData.centerPoint.position}"},"latitude":{"type":"text","name":"纬度","value":"${this.popupPanelData.centerPoint.latitude}"},"longitude":{"type":"text","name":"经度","value":"${this.popupPanelData.centerPoint.longitude}"},"magnitude":{"type":"text","name":"震级","value":"${this.popupPanelData.centerPoint.magnitude}"},"depth":{"type":"text","name":"震源深度","value":"${this.popupPanelData.centerPoint.depth}"}}`;
+            item.info = JSON.parse(infostr)
+            this.plotInfoActivities.push(item)
+            console.log(this.plotInfoActivities)
+          }
+          else{
+            this.getPlotInfo(this.popupPanelData.plotid)
+          }
         }
       }
     },
@@ -163,7 +182,7 @@ export default {
     getPlotInfo(plotid) {
       let that = this
       getPlotInfos({plotid}).then(res => {
-        console.log(res)
+        console.log("res",res)
         this.plotInfoActivities = []
         for (let i = 0; i < res.length; i++) {
           // 这个item一定要写在for循环里面，否则使用push(item)会造成整个plotInfoActivities都是最后一个item
@@ -180,7 +199,9 @@ export default {
           item.info = JSON.parse(res[i].info)
           item.id = res[i].id
           that.plotInfoActivities.push(item)
+          console.log(item)
         }
+
       })
     },
     // 时间戳转换成日期格式，将时间戳转换成 xx年xx月xx日xx时xx分xx秒格式，
