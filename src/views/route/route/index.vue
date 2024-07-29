@@ -9,7 +9,7 @@
       <el-button class="el-button--primary" @click="emergencyResourceInformation">应急资源信息</el-button>
     </el-form>
     <RouterPanel :visible="popupVisible" :position="popupPosition" :popupData="popupData" @wsSendPoint="wsSendPoint"/>
-  </div>
+    </div>
 </template>
 
 <script>
@@ -126,12 +126,33 @@ export default {
               disableDepthTestDistance: Number.POSITIVE_INFINITY // 不再进行深度测试
             },
             properties: {
-              address: element.address,
               county: element.county,
-              contactPerson: element.contactPerson,
+              storagePointsCount: element.storagePointsCount,
+              totalKitsCount: element.totalKitsCount,
+              disasterTentsCount: element.disasterTentsCount,
+              cottonBlanketsCount: element.cottonBlanketsCount,
+              otherBlanketsCount: element.otherBlanketsCount,
+              cottonClothesCount: element.cottonClothesCount,
+              cottonCoatsCount: element.cottonCoatsCount,
+              otherClothesCount: element.otherClothesCount,
+              woolBlanketsCount: element.woolBlanketsCount,
+              foldingBedsCount: element.foldingBedsCount,
+              bunkBedsCount: element.bunkBedsCount,
+              stripedClothBundlesCount: element.stripedClothBundlesCount,
+              moistureMatsCount: element.moistureMatsCount,
+              generatorsCount: element.otherBlanketsCount,
+              lightingFixturesCount: element.lightingFixturesCount,
+              lightingKitsCount: element.lightingKitsCount,
+              flashlightsCount: element.flashlightsCount,
+              raincoatsCount: element.raincoatsCount,
+              rainBootsCount: element.rainBootsCount,
+              otherSuppliesCount: element.otherSuppliesCount,
+              address: element.address,
               lon: element.longitude,
               lat: element.latitude,
+              contactPerson: element.contactPerson,
               contactPhone: element.contactPhone,
+              insertTime: element.insertTime,
               id: element.id
             }
           });
@@ -420,12 +441,34 @@ export default {
           // 2-5 更新弹窗位置
           // that.selectedEntity = window.selectedEntity
           that.popupData = {
+            county: window.selectedEntity.properties.county.getValue(),
+            storagePointsCount: window.selectedEntity.properties.storagePointsCount.getValue(),
+            totalKitsCount: window.selectedEntity.properties.totalKitsCount.getValue(),
+            disasterTentsCount: window.selectedEntity.properties.disasterTentsCount.getValue(),
+            cottonBlanketsCount: window.selectedEntity.properties.cottonBlanketsCount.getValue(),
+            otherBlanketsCount: window.selectedEntity.properties.otherBlanketsCount.getValue(),
+            cottonClothesCount: window.selectedEntity.properties.cottonClothesCount.getValue(),
+            cottonCoatsCount: window.selectedEntity.properties.cottonCoatsCount.getValue(),
+            otherClothesCount: window.selectedEntity.properties.otherClothesCount.getValue(),
+            woolBlanketsCount: window.selectedEntity.properties.woolBlanketsCount.getValue(),
+            foldingBedsCount: window.selectedEntity.properties.foldingBedsCount.getValue(),
+            bunkBedsCount: window.selectedEntity.properties.bunkBedsCount.getValue(),
+            stripedClothBundlesCount: window.selectedEntity.properties.stripedClothBundlesCount.getValue(),
+            moistureMatsCount: window.selectedEntity.properties.moistureMatsCount.getValue(),
+            generatorsCount: window.selectedEntity.properties.generatorsCount.getValue(),
+            lightingFixturesCount: window.selectedEntity.properties.lightingFixturesCount.getValue(),
+            lightingKitsCount: window.selectedEntity.properties.lightingKitsCount.getValue(),
+            flashlightsCount: window.selectedEntity.properties.flashlightsCount.getValue(),
+            raincoatsCount: window.selectedEntity.properties.raincoatsCount.getValue(),
+            rainBootsCount: window.selectedEntity.properties.rainBootsCount.getValue(),
+            otherSuppliesCount: window.selectedEntity.properties.otherSuppliesCount.getValue(),
             address: window.selectedEntity.properties.address.getValue(),
-            contactPerson: window.selectedEntity.properties.contactPerson.getValue(),
-            contactPhone: window.selectedEntity.properties.contactPhone.getValue(),
             lon: window.selectedEntity.properties.lon.getValue(),
             lat: window.selectedEntity.properties.lat.getValue(),
-            county: window.selectedEntity.properties.county.getValue(),
+            contactPerson: window.selectedEntity.properties.contactPerson.getValue(),
+            contactPhone: window.selectedEntity.properties.contactPhone.getValue(),
+            insertTime: window.selectedEntity.properties.insertTime.getValue(),
+            id: window.selectedEntity.properties.id.getValue(),
           };
           this.popupVisible = true; // 显示弹窗
           this.updatePopupPosition(); // 更新弹窗的位置
