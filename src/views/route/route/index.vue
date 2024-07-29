@@ -1,6 +1,6 @@
 <template>
   <div id="cesiumContainer">
-    <el-form class="tool-container">
+    <el-form class="route-tool-container">
       <el-button class="el-button--primary" @click="route">路径规划</el-button>
       <el-button class="el-button--primary" @click="addArea">添加障碍区域</el-button>
       <el-button class="el-button--primary" @click="removeAll">清空所有实体</el-button>
@@ -17,10 +17,10 @@ import CesiumNavigation from "cesium-navigation-es6";
 import {initCesium} from '@/cesium/tool/initCesium.js'
 // import geojsonmap from '@/assets/geoJson/map.json'
 // import geojsonmap from '@/assets/geoJson/YaanRoadGeoJson.json'
-import axios from "axios";
 import start from '@/assets/start.svg'
 import end from '@/assets/end.svg'
 import {Entity} from "cesium";
+import {getWay} from '@/api/system/routeplan.js'
 
 export default {
   name: "index",
@@ -121,15 +121,9 @@ export default {
           propertiesId.push(billBoardId)
         }
         if(that.pos.length===2){
-          axios.post('http://127.0.0.1:8089/map_test/way', { // 'http://127.0.0.1:8089/map_test/way'
-            pathWay:that.pos,
-            hardAreas:that.areas
-          }).then(function (response) {
-            console.log(response.data,123)
-              that.polylineD(response.data.path,propertiesId)
-              that.pos = []
-          }).catch(err=>{
-            alert("无可行路径")
+          getWay({pathWay:that.pos, hardAreas:that.areas}).then(res=>{
+            that.polylineD(res.path,propertiesId)
+            that.pos = []
           })
           handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
         }
@@ -264,7 +258,7 @@ export default {
 .cesium-viewer-navigationContainer {
   display: none !important;
 }
-.tool-container {
+.route-tool-container {
   position: absolute;
   padding: 15px;
   border-radius: 5px;
@@ -276,7 +270,7 @@ export default {
   background-color: rgba(40, 40, 40, 0.7);
 }
 #cesiumContainer {
-  height: 100%;
+  height: calc(100vh - 50px);
   width: 100%;
   margin: 0;
   padding: 0;
