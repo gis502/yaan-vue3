@@ -88,6 +88,16 @@ export const constantRoutes = [
     path:'/thd',
     component: () =>import('@/components/Cesium/thd'),
     hidden: true
+  },
+
+  {
+    // path:'/thdTimeLine',
+    path: '/thdTimeLine/:eqid',
+    component: () =>import('@/components/Cesium/thdTimeLine.vue'),
+    name:'thdTimeLine',
+    props: true
+
+    // hidden: true
   }
 ]
 

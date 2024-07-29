@@ -85,10 +85,10 @@ export default {
         that.tableData = res
       })
     },
-    go() {
-      let route = this.$router.resolve({path: '/thd'}).href
-      window.open(route, '_blank');
-    },
+    // go() {
+    //   let route = this.$router.resolve({path: '/thd'}).href
+    //   window.open(route, '_blank');
+    // },
     nowTime() {
       let myDate = new Date();
       let myYear = myDate.getFullYear() //获取完整的年份(4位,1970-????)
