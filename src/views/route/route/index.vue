@@ -27,6 +27,7 @@ import cesiumPlot from '@/cesium/plot/cesiumPlot.js'
 import { initWebSocket } from '@/cesium/WS.js'
 import {getDisasterReserves} from "../../../api/system/emergency.js";
 import disasterReliefMaterialReserve from '@/assets/images/disasterReliefMaterialReserve.png';
+import {getWay} from "@/api/system/routeplan.js";
 
 
 export default {
@@ -44,12 +45,12 @@ export default {
   },
   mounted() {
     this.init();
-    this.entitiesClickPonpHandler()
-    this.watchTerrainProviderChanged();
-    cesiumPlot.init(window.viewer, this.websock, this.$store)
-    console.log(" this.$router.currentRoute11111111:", this.$router.currentRoute)
-    this.initPlot(this.id)
-    this.initWebsocket()
+    // this.entitiesClickPonpHandler()
+    // this.watchTerrainProviderChanged();
+    // cesiumPlot.init(window.viewer, this.websock, this.$store)
+    // console.log(" this.$router.currentRoute11111111:", this.$router.currentRoute)
+    // this.initPlot(this.id)
+    // this.initWebsocket()
     //---------------------------
   },
   methods:{
