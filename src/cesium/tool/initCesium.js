@@ -25,6 +25,43 @@ export function initCesium(Cesium) {
         timeline: false, // 是否显示时间轴
         navigationHelpButton: false, // 是否显示右上角的帮助按钮
         scene3DOnly: false, // 如果设置为true，则所有几何图形以3D模式绘制以节约GPU资源
+        //截图和渲染相关的一些配置
+        contextOptions: {
+            webgl: {
+              alpha: true,
+              depth: false,
+              stencil: true,
+              antialias: true,
+              premultipliedAlpha: true,
+                //cesium状态下允许canvas转图片convertToImage
+              preserveDrawingBuffer: true,
+              failIfMajorPerformanceCaveat: true
+            },
+            allowTextureFilterAnisotropic: true
+        },
+        // 天地图影像
+        // imageryProvider: new Cesium.WebMapTileServiceImageryProvider({
+        //   url: `http://t0.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=${TianDiTuToken}`,
+        //   layer: 'tdtBasicLayer',
+        //   style: 'default',
+        //   format: 'image/jpeg',
+        //   tileMatrixSetID: 'GoogleMapsCompatible',
+        // })
+        // 本地geoserver影像
+        // imageryProvider: new Cesium.WebMapServiceImageryProvider({
+        //   url: 'http://localhost:9080/geoserver/yaan/wms',
+        //   layers: 'yaan:yaan',
+        //   parameters: {
+        //     service: 'WMS',
+        //     format: 'image/png',
+        //     transparent: true
+        //   }
+        // })
+        // terrainProvider: new Cesium.CesiumTerrainProvider({
+        //     url: "http://localhost:9080/geoserver/www/dem",
+        // }),
+
+
         //获取或设置可用于图像选择的ProviderViewModel实例数组。
         imageryProviderViewModels: getImageryProviderArr(),
         //获取或设置可用于地形选择的ProviderViewModel实例数组。
@@ -60,9 +97,9 @@ function getImageryProviderArr() {
             //代表图层的图标
             iconUrl: bingAerial,
             //一个函数或命令，用于创建一个或多个提供程序，这些提供程序将在选择此项目时添加到地球仪中。
-            // `http://t0.tianditu.com/img_c/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=c&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=${TianDiTuToken}`,
             creationFunction: function () {
                 return new Cesium.WebMapTileServiceImageryProvider({
+                    // url:`http://t0.tianditu.com/img_c/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=c&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=${TianDiTuToken}`,
                     url: `/tdtproxy/img_c/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=c&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=${TianDiTuToken}`,
                     format: 'tiles',
                     tileMatrixSetID: 'c',

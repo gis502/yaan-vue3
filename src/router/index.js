@@ -83,6 +83,16 @@ export const constantRoutes = [
         meta: { title: '个人中心', icon: 'user' }
       }
     ]
+  },
+
+  {
+    // path:'/thdTimeLine',
+    path: '/thdTimeLine/:eqid',
+    component: () =>import('@/components/Cesium/thdTimeLine.vue'),
+    name:'thdTimeLine',
+    props: true
+
+    // hidden: true
   }
 ]
 

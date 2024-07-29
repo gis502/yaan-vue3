@@ -44,18 +44,21 @@ function websocketonmessage(e) {
                 let markData = JSON.parse(e.data).data
                 wsAdd(markType, markData)
             }
-        } else if (markOperate === "delete") {
+        }
+        else if (markOperate === "delete") {
             let id = JSON.parse(e.data).id
             if (markType === "point") {
                 window.viewer.entities.removeById(id)
-            } else if (markType === "polyline") {
+            }
+            else if (markType === "polyline") {
                 let polyline = window.viewer.entities.getById(id)
                 let polylinePosition = polyline.properties.getValue(Cesium.JulianDate.now())//用getvalue时添加时间是不是用来当日志的？
                 polylinePosition.pointPosition.forEach((item, index) => {
                     window.viewer.entities.remove(item)
                 })
                 window.viewer.entities.remove(polyline)
-            } else if (markType === "polygon") {
+            }
+            else if (markType === "polygon") {
                 let polygon = window.viewer.entities.getById(id)
                 let polygonPosition = polygon.properties.getValue(Cesium.JulianDate.now())//用getvalue时添加时间是不是用来当日志的？
                 polygonPosition.linePoint.forEach((item, index) => {
@@ -64,7 +67,8 @@ function websocketonmessage(e) {
                 window.viewer.entities.remove(polygon)
             }
         }
-    } catch (err) {
+    }
+    catch (err) {
         console.log(err, 'ws中catch到错误');
     }
 }
