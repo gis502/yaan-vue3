@@ -17,11 +17,10 @@ export function exportExcel(data) {
     })
 }
 
-export function getField(enumType) {
+export function getField() {
     return request({
         url: '/Field',
         method: 'GET',
-        params: { enumType }
     });
 }
 
