@@ -84,6 +84,11 @@ export const constantRoutes = [
       }
     ]
   },
+  {
+    path:'/thd',
+    component: () =>import('@/components/Cesium/thd'),
+    hidden: true
+  },
 
   {
     // path:'/thdTimeLine',
