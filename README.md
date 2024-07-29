@@ -33,3 +33,27 @@
 </template>>
 ```
 参考链接 `https://gitee.com/y_project/RuoYi-Vue/issues/I5F40M` `淞哥五分钟解决一个bug`
+
+> 访问倾斜模型，因url中+号导致无法获取正常数据
+
+修改node_modules/urijs/src/URI.js中
+```javascript
+    pathname: {
+      encode: {
+        // RFC3986 2.1: For consistency, URI producers and normalizers should
+        // use uppercase hexadecimal digits for all percent-encodings.
+        expression: /%(24|26|2B|2C|3B|3D|3A|40)/ig,
+        map: {
+          // -._~!'()*
+          '%24': '$',
+          '%26': '&',
+          '%2B': '+',
+          '%2C': ',',
+          '%3B': ';',
+          '%3D': '=',
+          '%3A': ':',
+          '%40': '@'
+        }
+      }
+```
+部分里的'%2B': '+'改为'%2B': '%2B',该文件中有两个encode,均需要修改
