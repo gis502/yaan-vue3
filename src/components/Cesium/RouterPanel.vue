@@ -7,6 +7,7 @@
         <div class="info-value">{{ value }}</div>
       </div>
     </div>
+<!--    -->
 <!--    <el-button @click="deletePoint" type="danger" icon="el-icon-delete" circle></el-button>-->
   </div>
 </template>

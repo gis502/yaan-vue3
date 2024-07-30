@@ -197,6 +197,7 @@ export default {
       arr.push([arr[0][0], arr[0][1]]); //闭环
       return arr;
     },
+
     route(){
       let handler = new Cesium.ScreenSpaceEventHandler(window.viewer.scene.canvas)
       let that =this
