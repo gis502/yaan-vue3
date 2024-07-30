@@ -93,7 +93,7 @@
 <script setup>
 import {ref, onMounted} from 'vue'
 import {ElMessage} from "element-plus";
-import {exportExcel, getField, getYaanCasualties} from "@/api/system/statistics.js";
+import {exportExcel, getField, getData} from "@/api/system/excel.js";
 import {Search} from "@element-plus/icons-vue";
 
 const dialogVisible = ref(false)
@@ -140,7 +140,7 @@ function handleQuery() {
 
 // 请求数据
 const getYaanCasualtiesList = async () => {
- await getYaanCasualties({
+ await getData({
     currentPage: currentPage.value,
     pageSize: pageSize.value,
     requestParams: requestParams.value,
