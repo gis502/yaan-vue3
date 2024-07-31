@@ -1,5 +1,9 @@
 <template>
   <div>
+    <div class="eqtitle">
+      <span class="eqtitle-text_eqname">{{this.centerPoint.position}}地震</span>
+      <span class="eqtitle-text_time">{{ this.formatTime(this.currentTime) }}</span>
+    </div>
 <!--    box包裹地图，截图需要-->
   <div id="box" ref="box">
     <div id="cesiumContainer">
@@ -17,15 +21,23 @@
 <!-- 进度条-->
     <div class="bottom" >
       <div class="play">
-<!--        <img src="../../assets/images/TimeLine/legend.png" style="width: 23%;height: 23%">-->
-<!--        <img class="play-pause-icon" src="../../assets/images/TimeLine/pause.png" style="width: 23%;height: 23%">-->
-
+        <img class="play-icon" src="../../assets/images/TimeLine/播放.png" v-if="!isTimerRunning" @click="toggleTimer" />
+        <img class="pause-icon" src="../../assets/images/TimeLine/暂停.png"  v-if="isTimerRunning" @click="toggleTimer" />
       </div>
-      <div class="time-ruler">
-        <div class="time-ruler-line">
+
+
+      <div class="time-ruler"  @mousedown="startDrag" @mouseenter="isDragging = true" @mouseleave="isDragging = true">
+        <div class="time-ruler-line" @click="jumpToTime">
+<!--        <div class="time-ruler-line">-->
           <div class="time-progress" :style="{ width: `${currentTimePosition}%` }"></div>
+<!--          <div class="time-progress"  ref="timeProgress"  :style="{ width: `${currentTimePosition}%` }"></div>-->
+<!--          <div class="time-progress" ref="timeProgress" :style="{ width: `${currentTimePosition}%` }"></div>-->
+          <div class="time-slider" :style="{ left: `${currentTimePosition-0.5}%` }"></div>
         </div>
       </div>
+
+
+
 
 <!--      时间点-->
       <div class="current-time-info">
@@ -38,9 +50,9 @@
     </div>
 
 <!--报告产出按钮-->
-    <div class="button-container">
-      <el-button class="el-button--primary" size="small" @click="takeScreenshot">报告产出</el-button>
-    </div>
+<!--    <div class="button-container">-->
+<!--      <el-button class="el-button&#45;&#45;primary" size="small" @click="takeScreenshot">报告产出</el-button>-->
+<!--    </div>-->
 
   </div>
 </template>
@@ -83,6 +95,7 @@ export default {
       store:'',
 
       currentTimePosition: 0,
+      // currentTimePointPosition:0,
       currentNodeIndex:1,
       intervalId: null,
       eqid:'',
@@ -93,11 +106,34 @@ export default {
       eqendTime:'',
 
 
-      centerPoint:null,
+      centerPoint:{
+        plotid:'',
+        position:'',
+        time:'',
+        magnitude:'',
+        longitude:'',
+        latitude:'',
+        height:'',
+        depth:'',
+        plottype:'震中'
+      },
       //用于记录是否是第一次加载点，false表示还没有加载
       plotisshow:{},
       plots:[],
+
+      //时间轴暂停播放状态
+      // isTimerRunning:false,
+      isTimerRunning:true,
+      flagstop:false,
+      rafId:null,
+      pausedTimePosition:0,
+      // isDragging:false,
+      isDragging: false,
+      dragStartX: 0,
+      dragStartPosition: 0,
+      // timeRulerRect: null
     };
+
   },
 
   created() {
@@ -108,11 +144,27 @@ export default {
     this.viewer = window.viewer
     this.store = this.$store
     this.getEqInfo(this.eqid)
+
+    // this.$el.addEventListener('click', (event) => {
+    //   const clickedPosition = event.offsetX;
+    //   this.updateTimeProgress(clickedPosition);
+    // });
+    // this.$el.addEventListener('click', this.handleClick);
+
   },
   beforeDestroy() {
     this.stopTimer();
+    // this.$el.removeEventListener('click', this.updateTimeProgress);
+    // this.$el.removeEventListener('click', this.handleClick);
   },
   methods: {
+    // handleClick(event) {
+    //   // 检查事件目标是否是 .time-ruler 元素
+    //   if (event.target.closest('timeProgress')) {
+    //     const clickedPosition = event.offsetX;
+    //     this.updateTimeProgress(clickedPosition);
+    //   }
+    // },
     //格式化时间
     formatTime(date) {
       // console.log(date)
@@ -132,9 +184,11 @@ export default {
     getEqInfo(eqid){
       // this.getPlot(eqid)
       getEqbyId({eqid:eqid}).then(res => {
-        // console.log(res)
+
         this.centerPoint=res
+
         this.centerPoint.plotid="center"
+        console.log("centerPoint",this.centerPoint)
         this.eqstartTime=new Date(res.time)
         // 计算结束时间 结束时间为开始后72小时，单位为毫秒
         this.eqendTime = new Date(this.eqstartTime.getTime() + (7*24 * 60 * 60 * 1000));
@@ -149,6 +203,7 @@ export default {
         this.plots = res
         console.log(res)
             res.forEach(item => {
+              if(!item.endtime){item.endtime=new Date(this.eqendTime.getTime() + 5000);}
               this.plotisshow[item.plotid]=0
             })
         // this.getPlot(this.eqid)
@@ -207,94 +262,219 @@ export default {
     // 生成实体点击事件的handler
       this.entitiesClickPonpHandler()
       this.watchTerrainProviderChanged()
+      this.watchTerrainProviderChanged()
       //开启时间轴
-      this.startTimerLine();
+      this.initTimerLine();
     },
 
-    //时间轴变换
-    startTimerLine() {
-      //归零
-      viewer.entities.removeAll();
-      this.currentNodeIndex=0;
-      this.currentTime=this.eqstartTime;
-      this.currentTimePosition=0;
-//加载中心点
-      viewer.entities.add({
-        // properties: {
-        //   type: "震中",
-        //   time: this.centerPoint.time,
-        //   name: this.centerPoint.position,
-        //   lat: this.centerPoint.latitude,
-        //   lon: this.centerPoint.longitude,
-        //   describe: this.centerPoint.position,
-        // },
-        position: Cesium.Cartesian3.fromDegrees(
-            parseFloat(this.centerPoint.longitude),
-            parseFloat(this.centerPoint.latitude),
-            parseFloat(this.centerPoint.height || 0)
-        ),
-        billboard: {
-          image: centerstar,
-          width: 50,
-          height: 50,
-        },
-        label: {
-          text: this.centerPoint.position,
-          show: true,
-          font: '14px sans-serif',
-          fillColor:Cesium.Color.RED,        //字体颜色
-          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-          outlineWidth: 2,
-          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-          pixelOffset: new Cesium.Cartesian2(0, -16),
-        },
-        plotid:this.centerPoint.plotid,
-        plottype:"震中",
-      });
+    // stopTimer() {
+    //
+    //   console.log("stopTimer",this.currentTimePosition,this.pausedTimePosition)
+    //     this.isTimerRunning = false;
+    //
+    //   window.cancelAnimationFrame(this.rafId);
+    //
+    //   this.rafId = null;
+    //     this.currentTimePosition = this.pausedTimePosition;
+    //   console.log("stopTimer111111",this.currentTimePosition,this.pausedTimePosition)
+    // },
+    // updateTimePosition() {
+    //   console.log("updateTimePosition",this.currentTimePosition,this.pausedTimePosition)
+    //   this.currentNodeIndex=(this.currentNodeIndex+1)%672  //共前进720次
+    //   let tmp=100.0/672.0  //进度条每次前进
+    //   this.currentTimePosition +=tmp;
+    //   //
+    //   this.currentTimePosition=this.currentTimePosition%100
+    //   this.currentTime = new Date(this.eqstartTime.getTime()+ this.currentNodeIndex * 12 * 60* 1000);
+    //
+    //
+    //   // 使用 pausedTimePosition 来计算当前进度条位置
+    //   // this.currentTimePosition = this.pausedTimePosition || 0;
+    //   // this.currentNodeIndex = Math.floor(this.currentTimePosition / (100.0 / 672.0));
+    //   // this.currentTime = new Date(this.eqstartTime.getTime() + this.currentNodeIndex * 12 * 60 * 1000);
+    // },
+    // updateCurrentTime() {
+    //   console.log("updateCurrentTime111",this.currentTimePosition,this.pausedTimePosition)
+    //   this.pausedTimePosition=this.currentTimePosition
+    //   console.log("updateCurrentTime222",this.currentTimePosition,this.pausedTimePosition)
+    //   this.updateTimePosition();
+    //
+    //   this.rafId = window.requestAnimationFrame(this.updateCurrentTime);
+    // },
+
+    initTimerLine() {
+      if(this.currentTimePosition >= 100 || this.currentTimePosition==0) {
+        //归零
+        viewer.entities.removeAll();
+        this.currentNodeIndex=0;
+        this.currentTime=this.eqstartTime;
+        this.currentTimePosition=0;
+        this.currentTimePointPosition= this.currentNodeIndex-0.5
+        //加载中心点
+        viewer.entities.add({
+          // properties: {
+          //   type: "震中",
+          //   time: this.centerPoint.time,
+          //   name: this.centerPoint.position,
+          //   lat: this.centerPoint.latitude,
+          //   lon: this.centerPoint.longitude,
+          //   describe: this.centerPoint.position,
+          // },
+          position: Cesium.Cartesian3.fromDegrees(
+              parseFloat(this.centerPoint.longitude),
+              parseFloat(this.centerPoint.latitude),
+              parseFloat(this.centerPoint.height || 0)
+          ),
+          billboard: {
+            image: centerstar,
+            width: 50,
+            height: 50,
+          },
+          label: {
+            text: this.centerPoint.position,
+            show: true,
+            font: '14px sans-serif',
+            fillColor:Cesium.Color.RED,        //字体颜色
+            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            outlineWidth: 2,
+            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+            pixelOffset: new Cesium.Cartesian2(0, -16),
+          },
+          id:this.centerPoint.plotid,
+          plottype:"震中",
+        });
+      }
       //时间轴开始
+      // this.timeRulerRect = this.$refs.timeRuler.getBoundingClientRect();
       this.intervalId = setInterval(() => {
         this.updateCurrentTime();
       }, 160);
-    },
 
-    stopTimer() {
-      clearInterval(this.intervalId);
     },
     updateCurrentTime() {
-      //当前往前一步等于真实世界20分钟;6步等于1s; (1s等于2小时)
-      // this.currentNodeIndex=(this.currentNodeIndex+1)%216
-      // let tmp=100.0/216.0
-      this.currentNodeIndex=(this.currentNodeIndex+1)%672  //共前进720次
-      let tmp=100.0/672.0  //进度条每次前进
-      this.currentTimePosition +=tmp;
-
+      this.currentNodeIndex = (this.currentNodeIndex + 1) % 672  //共前进720次
+      let tmp = 100.0 / 672.0  //进度条每次前进
+      this.currentTimePosition += tmp;
       if (this.currentTimePosition >= 100) {
         this.currentTimePosition = 100;
         this.currentTime=this.eqendTime
         this.stopTimer();
+
       }
       else{
-        this.currentTimePosition=this.currentTimePosition%100
-        // 当前往前一步等于真实世界20分钟(1s等于2小时)
-        // this.currentTime = new Date(this.eqstartTime.getTime()+ this.currentNodeIndex * 20 * 60* 1000);
-        //每次15分钟
-        this.currentTime = new Date(this.eqstartTime.getTime()+ this.currentNodeIndex * 12 * 60* 1000);
-        this.updatePlot()
+      this.currentTimePosition = this.currentTimePosition % 100
+      //每次15分钟
+      this.currentTime = new Date(this.eqstartTime.getTime() + this.currentNodeIndex * 12 * 60 * 1000);
+      this.updatePlot()
       }
     },
+
+   //
+   // updateTimeProgress(clickedPosition) {
+   //   // this.currentTimePosition=
+   //   // if(this.intervalId){
+   //   //   this.stopTimer()
+   //   //   this.flagstop=true
+   //   // }
+   //    // 直接更新 .time-progress 的 style.width
+   //    this.$refs.timeProgress.style.width = `${clickedPosition}px`;
+   //    // 更新 currentTimePosition 数据,用于更新 .node 的位置
+   //    // this.currentTimePosition = (clickedPosition / timeRulerRect.width) * 100;
+   //   const timeRulerWidth = this.$el.querySelector('timeProgress').offsetWidth;
+   //   this.currentTimePosition = (clickedPosition / timeRulerWidth) * 100;
+   //   // const clickedPosition = event.clientX - timeRulerRect.left;
+   //    this.currentNodeIndex = Math.floor((this.currentTimePosition / 100) * 672); // Assuming 672 is the total number of steps
+   //    this.currentTime = new Date(this.eqstartTime.getTime() + this.currentNodeIndex * 12 * 60 * 1000);
+   //    this.updatePlot111();
+   //   // if(this.flagstop==true){
+   //   //   this.flagstop=false
+   //   //   setTimeout(() => {
+   //   //     this.initTimerLine();
+   //   //   }, 300);
+   //   // }
+   //  },
+
+    toggleTimer() {
+      // console.log("toggleTimer",this.isTimerRunning)
+      if (this.isTimerRunning) {
+        this.stopTimer();
+        this.isTimerRunning = false;
+      } else {
+        this.isTimerRunning=true
+        this.initTimerLine();
+      }
+    },
+
+    jumpToTime(event) {
+      const timeRulerRect = event.target.closest('.time-ruler').getBoundingClientRect();
+      const clickedPosition = event.clientX - timeRulerRect.left;
+      // this.$refs.timeProgress.style.width = `${clickedPosition}px`;
+      // Calculate the new current time position and index
+      this.currentTimePosition = (clickedPosition / timeRulerRect.width) * 100;
+      this.$el.querySelector('.time-progress').style.width = `${this.currentTimePosition}%`;
+      // this.currentTimePointPosition=this.currentTimePosition-0.5
+      this.currentNodeIndex = Math.floor((this.currentTimePosition / 100) * 672); // Assuming 672 is the total number of steps
+      // Update the current time
+      this.currentTime = new Date(this.eqstartTime.getTime() + this.currentNodeIndex * 12 * 60 * 1000);
+      // console.log(this.currentTime)
+      //点击前运行状态
+      this.updatePlot();
+
+    },
+    startDrag(event) {
+      this.isDragging = true;
+      this.dragStartX = event.clientX;
+      this.dragStartPosition = this.currentTimePosition;
+      document.addEventListener('mousemove', this.drag);
+      document.addEventListener('mouseup', this.stopDrag);
+    },
+    drag(event) {
+      if (!this.isDragging) return;
+      const timeRulerRect = this.$el.querySelector('.time-ruler').getBoundingClientRect();
+      const clickedPosition = Math.max(timeRulerRect.left, Math.min(event.clientX, timeRulerRect.right)) - timeRulerRect.left;
+      const newPosition = (clickedPosition / timeRulerRect.width) * 100;
+      this.currentTimePosition = newPosition;
+      this.currentNodeIndex = Math.floor((this.currentTimePosition / 100) * 672); // Assuming 672 is the total number of steps
+      // Update the current time
+      this.currentTime = new Date(this.eqstartTime.getTime() + this.currentNodeIndex * 12 * 60 * 1000);
+      this.$el.querySelector('.time-progress').style.width = `${newPosition}%`;
+    },
+    stopDrag() {
+      this.isDragging = false;
+      document.removeEventListener('mousemove', this.drag);
+      document.removeEventListener('mouseup', this.stopDrag);
+      this.updatePlot();
+    },
+
+
+    // updatePlot111() {
+    //   console.log("updatePlot111")
+    // },
+
+
+    stopTimer() {
+      clearInterval(this.intervalId);
+      this.intervalId=null;
+      console.log("stopTimer")
+    },
+
 
     updatePlot() {
       //添加
       let pointArr =  this.plots.filter(e => e.drawtype === 'point')
-
+      // console.log(pointArr)
         pointArr.forEach(item => {
           const currentDate = new Date(this.currentTime);
           // 将 this.timestampToTime(item.starttime) 转换为 Date 对象
           const startDate = new Date(this.timestampToTime(parseInt(item.starttime)));
           const endDate = new Date(this.timestampToTime(parseInt(item.endtime)));
-          // console.log(endDate,currentDate)
-          if((startDate<=currentDate) && (this.plotisshow[item.plotid]==0)){
-              this.plotisshow[item.plotid]=1
+          // const startDate = new Date(item.starttime);
+          // const endDate = new Date(item.endtime);
+          // console.log(item.plotid,startDate,endDate,currentDate)
+          // if((startDate<=currentDate) && (this.plotisshow[item.plotid]==0)){
+          if(startDate<=currentDate && endDate>=currentDate){
+              // this.plotisshow[item.plotid]=1
+              console.log(item.plotid,"add")
               viewer.entities.add({
                 // properties: {
                 //   id: item.plotid,
@@ -316,7 +496,7 @@ export default {
                   height: 50,
                 },
                 // label: {
-                //   // text: item.pointname,
+                //   text: item.pointname,
                 //   show: true,
                 //   font: '14px sans-serif',
                 //   style: Cesium.LabelStyle.FILL_AND_OUTLINE,
@@ -324,16 +504,18 @@ export default {
                 //   verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
                 //   pixelOffset: new Cesium.Cartesian2(0, -16),
                 // },
-                plotid: item.plotid,
+                id: item.plotid,
                 plottype:item.plottype,
               });
             }
-          if(endDate<=currentDate && this.plotisshow[item.plotid]==1){
-            this.plotisshow[item.plotid]=2
-            // console.log(item.plotid,"end")
+          // if((endDate<=currentDate || startDate>currentDate )&& this.plotisshow[item.plotid]==1){
+          if(endDate<=currentDate || startDate>currentDate){
+            // this.plotisshow[item.plotid]=2
+            console.log(item.plotid,"end")
             viewer.entities.removeById(item.plotid)
           }
         });
+      // console.log(viewer.entities)
     },
     timestampToTime(timestamp) {
       let DateObj = new Date(timestamp)
@@ -443,7 +625,7 @@ export default {
           // that.selectedEntity = window.selectedEntity
           // console.log("window.selectedEntity",window.selectedEntity)
           that.popupData = {
-            plotid:window.selectedEntity.plotid,
+            plotid:window.selectedEntity.id,
             plotname:window.selectedEntity.plottype,
             // eqid:that.eqid
             centerPoint:that.centerPoint
@@ -557,16 +739,20 @@ export default {
 .time-ruler {
   position: relative;
   width: 90%;
-  height: 30px;
+  height: 100%;
+  //background-color: #0d325f;
+  //height: 30px;
   left: 8%;
+
 }
 
 .time-ruler-line {
   position: absolute;
-  top: 50%;
+  top: 30%;
   left: 0;
   width: 100%;
-  height: 10px;
+  height: 20%;
+  //height: 10px;
   background-color: #ccc;
   transform: translateY(-50%);
 }
@@ -575,8 +761,8 @@ export default {
   top: 0;
   left: 0;
   height: 100%;
-  background-color: #3498db;
-  transition: width 0.3s ease-in-out;
+  background-color: #196cd2;
+  transition: none;
 }
 .current-time-info{
   position: absolute;
@@ -591,7 +777,7 @@ export default {
   right:0%;
 }
 .timelabel{
-  color: #FFFFFF;
+  color: #000000;
 }
 .time-ruler-node {
   position: absolute;
@@ -627,5 +813,47 @@ export default {
   height: 10px;
   background-color: #2eeeff;
   border-radius: 50%;
+}
+
+.eqtitle{
+  background-color: #0d325f;
+  width: 100%;
+  height:10%;
+}
+.eqtitle-text_eqname{
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  margin-left: 30px;
+  margin-right: 60%;
+}
+.eqtitle-text_time{
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  //margin-right: 30px;
+}
+.play{
+  width:3%;
+  hight:3%;
+  position:absolute;
+  //top:50%;
+  left:2%;
+}
+.play-icon,
+.pause-icon {
+  width: 100%;
+  height: 100%;
+}
+.time-slider {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #fff;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
 }
 </style>
