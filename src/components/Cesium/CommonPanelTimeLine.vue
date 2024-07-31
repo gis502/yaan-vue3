@@ -140,7 +140,7 @@ export default {
         // 在执行顺序上，visible比popupData快。导致在判断this.popupPanelData.plottype === plotType[item].name时，
         // popupPanelData是空，判断一定时false，造成第一次点击弹窗无法渲染对应标绘的html模板。
         // 可能时因为开启深度监听的原因（deep: true）。
-        console.log(this.popupPanelData)
+        console.log("pannel this.popupPanelData",this.popupPanelData)
         if (this.visiblePanel) {
           this.plotInfoActivities = []
           if(this.popupPanelData.plotid=="center"){

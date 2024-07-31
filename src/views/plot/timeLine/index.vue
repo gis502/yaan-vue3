@@ -93,7 +93,11 @@ import {useCesiumStore} from '@/store/modules/cesium.js'
 
 import centerstar from "@/assets/images/TimeLine/震中.png";
 import commonPanelTimeLine from "@/components/Cesium/CommonPanelTimeLine.vue";
-
+//报告产出
+import jsPDF from "jspdf";
+import "@/assets/json/TimeLine/SimHei-normal.js";
+import html2canvas from "html2canvas";
+// import canvas2image from 'canvas2image';
 export default {
   components: {
     commonPanelTimeLine
@@ -803,6 +807,22 @@ export default {
           // that.tz = tzs[1]
           // that.find()
         }
+      });
+    },
+
+
+    //截图
+    takeScreenshot() {
+      html2canvas(this.$refs.box).then((canvas) => {
+        // 创建一个临时链接元素
+        const link = document.createElement('a');
+        link.download = 'screenshot.png';
+        link.href = canvas.toDataURL('image/png');
+        // 将链接添加到 DOM 并单击它以下载图像
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        // console.log(this.$el.textContent); // I'm text inside the component.
       });
     },
   }

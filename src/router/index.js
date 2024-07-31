@@ -84,16 +84,6 @@ export const constantRoutes = [
       }
     ]
   },
-
-  {
-    // path:'/thdTimeLine',
-    path: '/thdTimeLine/:eqid',
-    component: () =>import('@/components/Cesium/thdTimeLine.vue'),
-    name:'thdTimeLine',
-    props: true
-
-    // hidden: true
-  }
 ]
 
 // 动态路由，基于用户权限动态去加载
