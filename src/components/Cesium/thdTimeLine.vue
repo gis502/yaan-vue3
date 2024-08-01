@@ -225,7 +225,6 @@ export default {
     // 生成实体点击事件的handler
       this.entitiesClickPonpHandler()
       this.watchTerrainProviderChanged()
-      this.watchTerrainProviderChanged()
       //开启时间轴
       this.initTimerLine();
     },
