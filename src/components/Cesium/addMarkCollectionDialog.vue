@@ -96,7 +96,7 @@ export default {
         this.form = cesiumStore.getPointInfo1()
         // 2-3 生成对应类型的dialog
         for (let item in plotType) {
-          if (this.form.type === plotType[item].name) {
+          if (this.form.plottype === plotType[item].name) {
             // 此处对plotType[item]用json的parse和stringify是因为需要深拷贝，而{...plotType[item]}是浅拷贝
             this.typeInfo = JSON.parse(JSON.stringify(plotType[item]))//{...plotType[item]}
             break;
@@ -121,8 +121,9 @@ export default {
       insertPlotAndInfo(data).then(res=>{
         this.$emit('drawPoint', data.plot)
         // 此处新定义变量存form是因为传过来给this.from的个promise包着的对象，传给ws会有问题
-        // let form = {...this.form}
-        // this.$emit('wsSendPoint', JSON.stringify({type: "point", operate: "add", data: form}))
+        let form = {...this.form}
+        console.log(form)
+        this.$emit('wsSendPoint', JSON.stringify({type: "point", operate: "add", data: form}))
         this.$emit('clearMarkDialogForm') // 调用父组件中clearMarkDialogForm对应的方法，重置标绘信息填写框里的信息
         ElMessage({
           message: '添加成功',
@@ -159,16 +160,16 @@ export default {
       }
       // 组装 plot
       assemblyData.plot.eqid = data1.eqid
-      assemblyData.plot.plotid = data1.id
+      assemblyData.plot.plotid = data1.plotid
       assemblyData.plot.time = Date.now() // 标绘主表的时间是系统生成时间，而不是手动选的标绘时间
-      assemblyData.plot.plottype = data1.type
+      assemblyData.plot.plottype = data1.plottype
       assemblyData.plot.drawtype = "point" // 点线面后面再判断，先写点，别忘了改！！！！
-      assemblyData.plot.latitude = data1.lat
-      assemblyData.plot.longitude = data1.lon
+      assemblyData.plot.latitude = data1.latitude
+      assemblyData.plot.longitude = data1.longitude
       assemblyData.plot.height = data1.height
       assemblyData.plot.img = data1.img
       // 组装plotinfo
-      assemblyData.plotinfo.plotid = data1.id
+      assemblyData.plotinfo.plotid = data1.plotid
       assemblyData.plotinfo.starttime = starttime
       assemblyData.plotinfo.endtime = endtime
       assemblyData.plotinfo.info = JSON.stringify(data2)

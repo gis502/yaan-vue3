@@ -62,10 +62,10 @@
 
       <!--      时间点-->
       <div class="current-time-info">
-        <span class="timelabel">{{ this.formatTime(this.currentTime) }}</span>
+        <span class="timelabel">{{ this.timestampToTime(this.currentTime) }}</span>
       </div>
       <div class="end-time-info">
-        <div class="timelabel">{{this.formatTime(this.eqendTime)}}</div>
+        <div class="timelabel">{{this.timestampToTime(this.eqendTime)}}</div>
       </div>
     </div>
     <!-- 进度条 end-->
@@ -84,20 +84,20 @@
 <script>
 import * as Cesium from 'cesium'
 import CesiumNavigation from "cesium-navigation-es6";
-import {ElMessage} from 'element-plus'
 import {initCesium} from '@/cesium/tool/initCesium.js'
-import {getPlot, getPlotIcon, getPlotwithStartandEndTime} from '@/api/system/plot'
+import {getPlotwithStartandEndTime} from '@/api/system/plot'
 import {getAllEq, getEqbyId} from '@/api/system/eqlist'
 import cesiumPlot from '@/cesium/plot/cesiumPlot'
-import {useCesiumStore} from '@/store/modules/cesium.js'
 
 import centerstar from "@/assets/images/TimeLine/震中.png";
 import commonPanelTimeLine from "@/components/Cesium/CommonPanelTimeLine.vue";
+
 //报告产出
 import jsPDF from "jspdf";
 import "@/assets/json/TimeLine/SimHei-normal.js";
 import html2canvas from "html2canvas";
 // import canvas2image from 'canvas2image';
+
 export default {
   components: {
     commonPanelTimeLine
@@ -209,7 +209,13 @@ export default {
       // console.log(this.eqid)
       let that = this
       getAllEq().then(res => {
-        that.getEqData = res
+        let data = []
+        for(let i=0;i<res.length;i++){
+          let item = res[i]
+          item.time = that.timestampToTime(res[i].time)
+          data.push(item)
+        }
+        that.getEqData = data
         that.total = res.length
         that.tableData = that.getPageArr()
         //当前地震
@@ -231,6 +237,23 @@ export default {
 
         this.updateMapandVariablebeforInit()
       })
+    },
+    timestampToTime(timestamp) {
+      let DateObj = new Date(timestamp)
+      // 将时间转换为 XX年XX月XX日XX时XX分XX秒格式
+      let year = DateObj.getFullYear()
+      let month = DateObj.getMonth() + 1
+      let day = DateObj.getDate()
+      let hh = DateObj.getHours()
+      let mm = DateObj.getMinutes()
+      let ss = DateObj.getSeconds()
+      month = month > 9 ? month : '0' + month
+      day = day > 9 ? day : '0' + day
+      hh = hh > 9 ? hh : '0' + hh
+      mm = mm > 9 ? mm : '0' + mm
+      ss = ss > 9 ? ss : '0' + ss
+      // return `${year}年${month}月${day}日${hh}时${mm}分${ss}秒`
+      return `${year}-${month}-${day} ${hh}:${mm}:${ss}`
     },
     // 切换地震，获取震中信息，切换地震地图视角
     plotAdj(row) {
@@ -507,45 +530,6 @@ export default {
       this.updatePlot();
     },
     //时间轴end-------------
-    //格式化时间 yyyy/mm/dd hh:mm:ss
-    formatTime(date) {
-      // console.log(date)
-      var dateString = date.toLocaleString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-      });
-      // 将字符串转换为 'yyyy-MM-dd HH:mm:ss' 格式
-      dateString = dateString.replace(/年|月/g, '-').replace(/日|时|分|秒/g, ' ');
-      return dateString
-    },
-    // 获取本次地震数据库中的数据渲染到地图上
-    // initPlot(eqid) {
-    //   let that = this
-    //   getPlot({eqid}).then(res=>{
-    //     let data = res
-    //     let pointArr = data.filter(e => e.drawtype === 'point')
-    //     pointArr.forEach(item => {
-    //       let point = {
-    //         eqid:item.eqid,
-    //         plotid:item.plotid,
-    //         time: item.time,
-    //         plottype:item.plottype,
-    //         drawtype:item.drawtype,
-    //         latitude: item.latitude,
-    //         longitude: item.longitude,
-    //         height: item.height,
-    //         img: item.img,
-    //       }
-    //       that.drawPoint(point)
-    //     })
-    //   })
-    // },
-
-
 
 
     // 所有entity实体类型点击事件的handler（billboard、polyline、polygon）
@@ -644,20 +628,22 @@ export default {
         };
       }
     },
-    // 关闭弹窗
-    closePlotPop() {
-      this.popupVisible = !this.popupVisible
-    },
-    // 获取标绘图片数据
-    getPlotPicture() {
-      let that = this
-      getPlotIcon().then(res => {
-        that.plotPicture = res
-        // 设置plotTree初始样式
-        // that.plotTreeClassification = res.filter(item=>item.type==="I类（次生地质灾害）")
-      })
-    },
 
+
+//截图
+//     takeScreenshot() {
+//       html2canvas(this.$refs.box).then((canvas) => {
+//         // 创建一个临时链接元素
+//         const link = document.createElement('a');
+//         link.download = 'screenshot.png';
+//         link.href = canvas.toDataURL('image/png');
+//         // 将链接添加到 DOM 并单击它以下载图像
+//         document.body.appendChild(link);
+//         link.click();
+//         document.body.removeChild(link);
+//         // console.log(this.$el.textContent); // I'm text inside the component.
+//       });
+//     },
 
 
     //-地震列表-------------------------------------
@@ -807,22 +793,6 @@ export default {
           // that.tz = tzs[1]
           // that.find()
         }
-      });
-    },
-
-
-    //截图
-    takeScreenshot() {
-      html2canvas(this.$refs.box).then((canvas) => {
-        // 创建一个临时链接元素
-        const link = document.createElement('a');
-        link.download = 'screenshot.png';
-        link.href = canvas.toDataURL('image/png');
-        // 将链接添加到 DOM 并单击它以下载图像
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        // console.log(this.$el.textContent); // I'm text inside the component.
       });
     },
   }

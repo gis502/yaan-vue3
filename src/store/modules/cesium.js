@@ -2,53 +2,57 @@ import {ref, reactive, computed} from "vue";
 
 export const useCesiumStore = defineStore('cesium', () => {
         const pointInfo = reactive({
-            lat: null,
-            lon: null,
+            // lat: null,
+            // lon: null,
+            // height: null,
+            // img: null,
+            // type: null,
+            // id: null,
+            // eqid: null,
+            // time: null,
+            // name: null,
+            // describe: null,
+            eqid: null,
+            plotid: null,
+            time: null,
+            plottype: null,
+            latitude: null,
+            longitude: null,
             height: null,
             img: null,
-            type: null,
-            id: null,
-            eqid: null,
-            time: null,
-            name: null,
-            describe: null,
         })
 
         function getPointInfo1(){
             return {
-                lat:pointInfo.lat,
-                lon:pointInfo.lon,
+                eqid:pointInfo.eqid,
+                plotid:pointInfo.plotid,
+                plottype:pointInfo.plottype,
+                latitude:pointInfo.latitude,
+                longitude:pointInfo.longitude,
                 height:pointInfo.height,
                 img:pointInfo.img,
-                type:pointInfo.type,
-                id:pointInfo.id,
-                eqid:pointInfo.eqid
             }
         }
 
         function setPointInfo1(info) {
-            pointInfo.lat = info.lat
-            pointInfo.lon = info.lon
+            pointInfo.eqid = info.eqid
+            pointInfo.plotid = info.plotid
+            pointInfo.plottype = info.plottype
+            pointInfo.latitude = info.latitude
+            pointInfo.longitude = info.longitude
             pointInfo.height = info.height
             pointInfo.img = info.img
-            pointInfo.type = info.type
-            pointInfo.id = info.id
-            pointInfo.eqid = info.eqid
         }
 
-        function setPointInfo2(info) {
-            pointInfo.eqid = info.eqid
-            pointInfo.time = info.time
-        }
 
         function clearData(){
-            pointInfo.lat = null
-            pointInfo.lon = null
+            pointInfo.eqid = null
+            pointInfo.plotid = null
+            pointInfo.plottype = null
+            pointInfo.latitude = null
+            pointInfo.longitude = null
             pointInfo.height = null
             pointInfo.img = null
-            pointInfo.type = null
-            pointInfo.id = null
-            pointInfo.eqid = null
         }
 
         return {pointInfo,getPointInfo1, setPointInfo1, clearData}

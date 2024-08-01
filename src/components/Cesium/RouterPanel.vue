@@ -1,122 +1,146 @@
 <template>
   <div class="videoMonitorWin" v-if="visiblePanel" :style="styleObject">
     <div class="ponpTitle">信息面板</div>
-    <table class="ponpTable">
-      <tbody>
-      <tr class="info-item">
-        <td>标注类型</td>
-        <td>{{this.popupPanelData.type}}</td>
-      </tr>
-      <tr class="info-item">
-        <td>时间</td>
-        <td>{{this.popupPanelData.time}}</td>
-      </tr>
-      <tr class="info-item">
-        <td>名称</td>
-        <td>{{this.popupPanelData.name}}</td>
-      </tr>
-      <tr class="info-item">
-        <td>经度</td>
-        <td>{{this.popupPanelData.lon}}</td>
-      </tr>
-      <tr class="info-item">
-        <td>纬度</td>
-        <td>{{this.popupPanelData.lat}}</td>
-      </tr>
-      <tr class="info-item" >
-        <td>描述</td>
-        <td style="text-align: left;">{{this.popupPanelData.describe}}</td>
-      </tr>
-      </tbody>
-    </table>
-    <el-button  @click="deletePoint" type="danger" icon="el-icon-delete" circle></el-button>
+    <div class="ponpTable">
+      <div class="info-item" v-for="(value, key) in popupPanelData" :key="key">
+        <div class="info-label">{{ keyToChinese(key) }}</div>
+        <div class="info-value">{{ value }}</div>
+      </div>
+    </div>
+<!--    <el-button @click="deletePoint" type="danger" icon="el-icon-delete" circle></el-button>-->
   </div>
 </template>
-<script>
 
+<script>
 export default {
-  data(){
-    return{
-      visiblePanel:null,
-      positionEntity:{ x: 0, y: 0 },
-      popupPanelData:{},
+  data() {
+    return {
+      visiblePanel: null,
+      positionEntity: { x: 0, y: 0 },
+      popupPanelData: {},
+      keyMappings: {
+        county: '县（区）',
+        storagePointsCount: '储备库点数量（个）',
+        totalKitsCount: '合计总件套数',
+        disasterTentsCount: '救灾帐篷（顶）',
+        cottonBlanketsCount: '棉被（床）',
+        otherBlanketsCount: '其他被子（床）',
+        cottonClothesCount: '棉衣裤（套）',
+        cottonCoatsCount: '棉大衣（件）',
+        otherClothesCount: '其他衣物（套、件）',
+        woolBlanketsCount: '毛毯（床）',
+        foldingBedsCount: '折叠床（张）',
+        bunkBedsCount: '高低床（套）',
+        stripedClothBundlesCount: '彩条布（包）',
+        moistureMatsCount: '防潮垫（张）',
+        generatorsCount: '发电机（台）',
+        lightingFixturesCount: '照明灯具（个）',
+        lightingKitsCount: '照明灯组（套）',
+        flashlightsCount: '手电筒（支）',
+        raincoatsCount: '雨衣（件）',
+        rainBootsCount: '雨靴（双）',
+        otherSuppliesCount: '其他装备数量（个）',
+        address: '地址',
+        lon: '经度',
+        lat: '纬度',
+        contactPerson: '联系人',
+        contactPhone: '联系电话',
+        insertTime: '插入时间',
+        // id: 'ID', // 如果需要显示ID，可以取消注释
+      }
     }
   },
-  props: [
-    'popupData','position','visible'
-  ],
-  watch:{
-    visible(){
-      this.visiblePanel = this.visible
+  props: ['popupData', 'position', 'visible'],
+  watch: {
+    visible() {
+      this.visiblePanel = this.visible;
     },
-    popupData:{
-      deep:true,
-      handler(){
-        this.popupPanelData = this.popupData
+    popupData: {
+      deep: true,
+      handler() {
+        this.popupPanelData = this.popupData;
       }
     },
-    position(){
-      this.positionEntity = this.position
+    position() {
+      this.positionEntity = this.position;
     },
   },
   computed: {
     // 调整弹框位置
     styleObject() {
       return {
-        positionEntity: "absolute",
+        position: "absolute",
         left: `${this.positionEntity.x}px`,
         top: `${this.positionEntity.y}px`
       };
     }
   },
-  methods:{
+  methods: {
+    keyToChinese(key) {
+      return this.keyMappings[key] || key;
+    },
     // 删除标注
-    deletePoint(){
-      this.$emit('closePlotPop')
-      this.$emit('wsSendPoint',JSON.stringify({type:"point",operate:"delete",id:window.selectedEntity.id}))
+    deletePoint() {
+      this.$emit('closePlotPop');
+      this.$emit('wsSendPoint', JSON.stringify({ type: "point", operate: "delete", id: window.selectedEntity.id }));
     }
   }
 };
 </script>
-<style >
-.videoMonitorWin{
+
+<style>
+.videoMonitorWin {
   position: absolute;
-  width: 600px;
+  height: 50vh;
+  width: 650px;
   padding: 20px;
   z-index: 10;
   background-color: rgba(40, 40, 40, 0.7);
   border: 2px solid #18c9dc;
-}
-.ponpTitle{
-  font-size: 23px;
-  text-align: center;
-  color: white;
-  margin-bottom: 10px;
-}
-.ponpTable{
-  text-align: center;
-  color: white;
-  margin-bottom: 10px;
-}
-.ponpTable td{
-  padding: 10px;
-}
-.info-item :nth-child(1){
-  width: 15%;
-  border-color:#293966;
-  border-top-style:solid;
-  border-top-width:2px;
-  background-color: #293966;
-  margin-bottom: 2px;
-  align-content: center;
-}
-.info-item :nth-child(2){
-  width: 60%;
-  border-color:#4d5469;
-  border-top-style:solid;
-  border-top-width:2px;
-  background-color: #4d5469;
-  margin-bottom: 2px;
+  overflow-y: auto;
 }
 
+.ponpTitle {
+  text-align: center;
+  font-size: 23px;
+  color: white;
+  margin-bottom: 10px;
+}
+
+.ponpTable {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: white;
+}
+
+.info-item {
+  text-align: center;
+  align-items:center;
+  flex: 1 1 calc(50% - 10px); /* 两列布局，减去gap的宽度 */
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  background-color: #293966;
+  border: 1px solid #4d5469;
+  border-radius: 4px;
+}
+
+.info-label {
+  flex: 1;
+  text-align: center;
+  margin-right: 10px;
+}
+
+.info-value {
+  flex: 1;
+  text-align: center;
+  /*background-color: #10344b;*/
+}
+
+el-button {
+  display: block;
+  margin: 20px auto 0;
+}
 </style>
+
