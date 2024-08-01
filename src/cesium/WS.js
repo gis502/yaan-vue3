@@ -76,8 +76,8 @@ function websocketonmessage(e) {
 function wsAdd(type, data) {
     if (type === "point") {
         window.viewer.entities.add({
-            id: data.id,
-            position: Cesium.Cartesian3.fromDegrees(Number(data.lon), Number(data.lat), Number(data.height)),
+            id: data.plotid,
+            position: Cesium.Cartesian3.fromDegrees(Number(data.longitude), Number(data.latitude), Number(data.height)),
             billboard: {
                 image: data.img,
                 width: 50,//图片宽度,单位px
@@ -90,15 +90,7 @@ function wsAdd(type, data) {
                 disableDepthTestDistance: Number.POSITIVE_INFINITY//不再进行深度测试（真神）
             },
             properties: {
-                type: data.type,
-                lon: data.lon,
-                lat: data.lat,
-                height: data.height,
-                id: data.id,
-                img: data.img,
-                time: data.time,
-                name: data.name,
-                describe: data.describe,
+                data
             }
         })
     } else if (type === "polyline") {

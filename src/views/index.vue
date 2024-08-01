@@ -5,7 +5,7 @@
         <span>雅安市地震应急信息服务技术支撑平台</span>
       </div>
       <div class="header-time">
-        <span id="time">{{ nowtime }}</span>
+        <span id="time">{{ nowTime }}</span>
       </div>
     </div>
 
@@ -64,13 +64,13 @@ export default {
   // name: "home",
   data() {
     return {
-      nowtime: null,
+      nowTime: null,
       tableData:[],
     }
   },
   mounted(){
     setInterval(() => {
-      this.nowtime = this.nowTime()
+      this.nowTime = this.nowTime()
     }, 500);
     this.getEq()
 

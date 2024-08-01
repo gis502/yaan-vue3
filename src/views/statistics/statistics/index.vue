@@ -93,42 +93,45 @@
 <script setup>
 import {ref, onMounted} from 'vue'
 import {ElMessage} from "element-plus";
-import {exportExcel,getField,getYaanCasualties} from "@/api/system/statistics.js";
+import {exportExcel, getField, getYaanCasualties} from "@/api/system/statistics.js";
 import {Search} from "@element-plus/icons-vue";
 
 const dialogVisible = ref(false)
-const flag = ref("YaanAftershockStatistics")
+const flag = ref()
 const currentPage = ref(1)
 const pageSize = ref(10)
 const requestParams = ref("")
-const options = [
-  {
-    label: '余震灾害统计表',
-    value: 'YaanAftershockStatistics',
-  },
-  {
-    label: '人员伤亡情况表',
-    value: 'YaanCasualties',
-  }
-]
+
 onMounted(() => {
   getTableField()
-  getYaanCasualtiesList()
+  //getYaanCasualtiesList()
 })
+const options = ref([]);
 const tableData = ref([])
 const field = ref([])
+const files = ref([])//存储当前用户的导表信息
 const name = ref([])
 const columns = ref([]); // 用于存储表格列配置
 const total = ref()
 /** 监听 */
 watch(flag, (newFlag) => {
+  const selectedFile = files.value.find(file => file.fileId === newFlag);
+  if (selectedFile && selectedFile.fileColumn) {
+    const fileColumn = JSON.parse(selectedFile.fileColumn);
+    const map = new Map(Object.entries(fileColumn));
+    field.value = Array.from(map.keys());
+    name.value = Array.from(map.values());
+    data.value = generateData();
+    columns.value = generateColumnConfig();
+  }
   // 清空选择
   clearSelection();
   value.value = [];
-  getTableField();
+  console.log("flag变化了打印files:", files.value, flag.value)
   getYaanCasualtiesList();
 
 });
+
 /** 搜索按钮操作 */
 function handleQuery() {
   currentPage.value = 1;
@@ -136,17 +139,18 @@ function handleQuery() {
 }
 
 // 请求数据
-const getYaanCasualtiesList = () =>{
-  getYaanCasualties({
+const getYaanCasualtiesList = async () => {
+ await getYaanCasualties({
     currentPage: currentPage.value,
     pageSize: pageSize.value,
     requestParams: requestParams.value,
-    flag:flag.value
+    flag: flag.value
   }).then(res => {
     tableData.value = res.data.records
     total.value = res.data.total
+    console.log("请求数据:", tableData.value)
   })
-  console.log("请求数据")
+
 }
 const generateColumnConfig = () => {
   return field.value.map((fieldName, index) => ({
@@ -165,21 +169,33 @@ const generateFieldData = () => {
 };
 
 /** 获取字段 */
-const getTableField = ()=>{
-  console.log("flag",flag.value)
-  getField(flag.value).then(res=>{
-    console.log(res)
-    const map = new Map(Object.entries(res.data))
+const getTableField = () => {
+  getField().then(res => {
+    files.value = res.data
+    if (files.value.length ==0) {
+      ElMessage.error("改用户无导表权限")
+    }
+
+    options.value = files.value.map(file => ({
+      label: file.fileName,
+      value: file.fileId
+    }));
+
+    flag.value = files.value[0].fileId; // 默认选择第一个表
+    const fileColumn = JSON.parse(files.value[0].fileColumn);
+    const map = new Map(Object.entries(fileColumn));
     field.value = Array.from(map.keys())
     name.value = Array.from(map.values())
     data.value = generateData();
     columns.value = generateColumnConfig();
+    console.log("表格字段:", columns.value)
+
   })
 }
 
 // 表格翻页选中（需要设置row-key）
 function getRowKey(row) {
-  return row.earthquakeId
+  return row.id
 }
 
 // 分页函数
@@ -188,9 +204,10 @@ const handleSizeChange = (val) => {
   getYaanCasualtiesList()
 }
 
-const handleCurrentChange = (val) => {
+const handleCurrentChange = async (val) => {
   currentPage.value = val
-  getYaanCasualtiesList()
+  await getYaanCasualtiesList()
+  console.log("当前页数据", tableData.value)
 }
 
 const generateData = _ => {
@@ -223,7 +240,7 @@ const exportStatistics = () => {
     exportExcel({
       fields: value.value,
       ids: ids,
-      flag:flag.value
+      flag: flag.value
     }).then(res => {
       const url = window.URL.createObjectURL(new Blob([res], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
       const link = document.createElement('a');
@@ -248,7 +265,6 @@ const handleSelectionChange = (val) => {
 const clearSelection = () => {
   multipleTableRef.value?.clearSelection()
 }
-
 
 
 </script>

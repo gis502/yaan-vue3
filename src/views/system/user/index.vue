@@ -252,7 +252,7 @@
             <el-row>
                <el-col :span="12">
                   <el-form-item label="岗位">
-                     <el-select v-model="form.postIds" multiple placeholder="请选择">
+                     <el-select v-model="form.fileIds" multiple placeholder="请选择">
                         <el-option
                            v-for="item in postOptions"
                            :key="item.postId"
@@ -277,6 +277,21 @@
                   </el-form-item>
                </el-col>
             </el-row>
+           <el-row>
+             <el-col :span="12">
+               <el-form-item label="导入导出权限">
+                 <el-select v-model="form.fileIds" multiple placeholder="请选择">
+                   <el-option
+                       v-for="item in excelOptions"
+                       :key="item.fileId"
+                       :label="item.fileName"
+                       :value="item.fileId"
+                       :disabled="item.status == 1"
+                   ></el-option>
+                 </el-select>
+               </el-form-item>
+             </el-col>
+           </el-row>
             <el-row>
                <el-col :span="24">
                   <el-form-item label="备注">
@@ -351,6 +366,7 @@ const deptName = ref("");
 const deptOptions = ref(undefined);
 const initPassword = ref(undefined);
 const postOptions = ref([]);
+const excelOptions = ref([]);
 const roleOptions = ref([]);
 /*** 用户导入参数 */
 const upload = reactive({
@@ -570,7 +586,8 @@ function reset() {
     status: "0",
     remark: undefined,
     postIds: [],
-    roleIds: []
+    roleIds: [],
+    fileIds:[]
   };
   proxy.resetForm("userRef");
 };
@@ -585,8 +602,11 @@ function cancel() {
 function handleAdd() {
   reset();
   getUser().then(response => {
+    console.log(response)
     postOptions.value = response.posts;
     roleOptions.value = response.roles;
+    excelOptions.value = response.fileIds;
+    excelOptions.value.
     open.value = true;
     title.value = "添加用户";
     form.value.password = initPassword.value;
@@ -601,8 +621,10 @@ function handleUpdate(row) {
     form.value = response.data;
     postOptions.value = response.posts;
     roleOptions.value = response.roles;
+    excelOptions.value = response.fileIds;
     form.value.postIds = response.postIds;
     form.value.roleIds = response.roleIds;
+    form.value.fileIds = response.userFileIds.map(item => item.fileId);
     open.value = true;
     title.value = "修改用户";
     form.password = "";

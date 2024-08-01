@@ -298,6 +298,7 @@ export default {
           //   describe: window.selectedEntity.properties.describe?window.selectedEntity.properties.describe.getValue():"",
           // };
           this.popupData = window.selectedEntity.properties.data ? window.selectedEntity.properties.data.getValue():""
+          console.log(window.selectedEntity.properties.data,this.popupData )
           this.popupVisible = true; // 显示弹窗
           this.updatePopupPosition(); // 更新弹窗的位置
         } else {
@@ -357,6 +358,7 @@ export default {
 
     // 切换地震，渲染切换地震的标绘
     plotAdj(row) {
+      console.log(row)
       window.viewer.entities.removeAll();
       this.eqid = row.eqid
       this.websock.eqid = this.eqid
@@ -606,7 +608,7 @@ export default {
 }
 
 #cesiumContainer {
-  height: 100%;
+  height: calc(100vh - 50px);
   width: 100%;
   margin: 0;
   padding: 0;

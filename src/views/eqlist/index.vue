@@ -2,7 +2,7 @@
   <div class="app-container">
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
-        <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleOpen('新增')">新增</el-button>
+        <el-button type="primary" plain icon="Plus" @click="handleOpen('新增')">新增</el-button>
       </el-col>
     </el-row>
     <el-table :data="tableData">
@@ -13,9 +13,9 @@
       <el-table-column prop="latitude" label="纬度"></el-table-column>
       <el-table-column prop="depth" label="深度"></el-table-column>
       <el-table-column label="操作" align="center">
-        <template slot-scope="scope">
-          <el-button size="mini" type="text" icon="el-icon-edit" @click="handleOpen('修改',scope.row)">修改</el-button>
-          <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)">删除</el-button>
+        <template #default="scope">
+          <el-button type="text" icon="Edit" @click="handleOpen('修改',scope.row)">修改</el-button>
+          <el-button type="text" icon="Delete" @click="handleDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -30,7 +30,7 @@
       :total="total">
     </el-pagination>
 
-    <el-dialog :title="dialogTitle" :visible.sync="dialogShow" width="30%" :show-close="false">
+    <el-dialog :title="dialogTitle" v-model="dialogShow" width="30%" :show-close="false">
       <el-row :gutter="10">
         <el-col :span="6">位置：</el-col>
         <el-col :span="18">
@@ -40,7 +40,14 @@
       <el-row :gutter="10">
         <el-col :span="6">发震时间：</el-col>
         <el-col :span="18">
-          <el-input v-model="dialogContent.time" placeholder="请输入内容"></el-input>
+<!--          <el-input v-model="dialogContent.time" placeholder="请输入内容"></el-input>-->
+          <el-date-picker
+              v-model="dialogContent.time"
+              type="datetime"
+              placeholder="选择日期时间"
+              value-format="x"
+              size="large">
+          </el-date-picker>
         </el-col>
       </el-row>
       <el-row :gutter="10">
@@ -110,9 +117,14 @@ export default {
       let that = this
       getAllEq().then(res => {
         that.getEqData = res
-        console.log(res)
         that.total = res.length
-        that.tableData = that.getPageArr()
+        let data = []
+        for(let i=0;i<res.length;i++){
+          let item = res[i]
+          item.time = that.timestampToTime(item.time)
+          data.push(item)
+        }
+        that.tableData = data
       })
     },
     // 删除单条地震
@@ -126,6 +138,7 @@ export default {
     handleOpen(title, row) {
       if (title === "新增") {
         this.dialogTitle = title
+        console.log(this.dialogTitle)
       } else {
         this.dialogTitle = title
         this.dialogContent = {...row}
@@ -136,7 +149,7 @@ export default {
     commit() {
       let that = this
       if (this.dialogTitle === "新增") {
-        this.dialogContent.eqid = Date.now()
+        this.dialogContent.eqid = this.guid()
         addEq(this.dialogContent).then(res => {
           that.getEq()
           that.dialogShow = false
@@ -186,7 +199,30 @@ export default {
       this.tableData = this.getPageArr()
       // console.log(`当前页: ${val}`);
     },
-
+    guid() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        let r = Math.random() * 16 | 0,
+            v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    },
+    timestampToTime(timestamp) {
+      let DateObj = new Date(timestamp)
+      // 将时间转换为 XX年XX月XX日XX时XX分XX秒格式
+      let year = DateObj.getFullYear()
+      let month = DateObj.getMonth() + 1
+      let day = DateObj.getDate()
+      let hh = DateObj.getHours()
+      let mm = DateObj.getMinutes()
+      let ss = DateObj.getSeconds()
+      month = month > 9 ? month : '0' + month
+      day = day > 9 ? day : '0' + day
+      hh = hh > 9 ? hh : '0' + hh
+      mm = mm > 9 ? mm : '0' + mm
+      ss = ss > 9 ? ss : '0' + ss
+      // return `${year}年${month}月${day}日${hh}时${mm}分${ss}秒`
+      return `${year}-${month}-${day} ${hh}:${mm}:${ss}`
+    },
   }
 }
 </script>
