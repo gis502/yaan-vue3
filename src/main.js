@@ -43,9 +43,10 @@ import ImagePreview from "@/components/ImagePreview"
 import TreeSelect from '@/components/TreeSelect'
 // 字典标签组件
 import DictTag from '@/components/DictTag'
+//表格调整列宽
+import fitTableColumns from '@/utils/fit-table-columns.js'
 
 const app = createApp(App)
-
 // 全局方法挂载
 app.config.globalProperties.useDict = useDict
 app.config.globalProperties.download = download
@@ -65,7 +66,7 @@ app.component('ImageUpload', ImageUpload)
 app.component('ImagePreview', ImagePreview)
 app.component('RightToolbar', RightToolbar)
 app.component('Editor', Editor)
-
+fitTableColumns(app)
 app.use(router)
 app.use(store)
 app.use(plugins)

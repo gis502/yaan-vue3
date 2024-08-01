@@ -37,6 +37,7 @@
     </el-row>
 
     <el-table
+        v-fit-columns
         ref="multipleTableRef"
         :data="tableData"
         class="table"
@@ -44,14 +45,22 @@
         @selection-change="handleSelectionChange"
     >
       <el-table-column type="selection" width="50" align="center" :reserve-selection="true"/>
-      <el-table-column prop="id" label="序号" width="50" align="center"/>
+<!--      <el-table-column prop="id" label="序号" width="50" align="center"/>-->
+      <el-table-column
+          label="序号"
+          width="50"
+          align="center"
+          :formatter="typeIndex"
+      />
+
       <el-table-column
           v-for="col in columns"
           :key="col.prop"
           :prop="col.prop"
           :label="col.label"
           :align="col.align"
-          :width="col.width"
+
+
       />
     </el-table>
     <el-pagination
@@ -104,7 +113,6 @@ const requestParams = ref("")
 
 onMounted(() => {
   getTableField()
-  //getYaanCasualtiesList()
 })
 const options = ref([]);
 const tableData = ref([])
@@ -113,6 +121,7 @@ const files = ref([])//存储当前用户的导表信息
 const name = ref([])
 const columns = ref([]); // 用于存储表格列配置
 const total = ref()
+
 /** 监听 */
 watch(flag, (newFlag) => {
   const selectedFile = files.value.find(file => file.fileId === newFlag);
@@ -127,7 +136,6 @@ watch(flag, (newFlag) => {
   // 清空选择
   clearSelection();
   value.value = [];
-  console.log("flag变化了打印files:", files.value, flag.value)
   getYaanCasualtiesList();
 
 });
@@ -140,7 +148,7 @@ function handleQuery() {
 
 // 请求数据
 const getYaanCasualtiesList = async () => {
- await getData({
+  await getData({
     currentPage: currentPage.value,
     pageSize: pageSize.value,
     requestParams: requestParams.value,
@@ -148,18 +156,24 @@ const getYaanCasualtiesList = async () => {
   }).then(res => {
     tableData.value = res.data.records
     total.value = res.data.total
-    console.log("请求数据:", tableData.value)
   })
 
 }
+
+/**自增序号**/
+const typeIndex = (row, column, cellValue, index) => {
+  return index + 1 + (currentPage.value - 1) * pageSize.value;
+};
+
 const generateColumnConfig = () => {
   return field.value.map((fieldName, index) => ({
     prop: fieldName,
     label: name.value[index],
     align: "center",
-    width: index < 2 ? "200" : undefined // Example: setting width for the first two columns
+    width: null // Example: setting width for the first two columns
   }));
 };
+
 const generateFieldData = () => {
   return field.value.map((fieldName, index) => ({
     value: fieldName,    // `value` should match field identifier
@@ -172,7 +186,7 @@ const generateFieldData = () => {
 const getTableField = () => {
   getField().then(res => {
     files.value = res.data
-    if (files.value.length ==0) {
+    if (files.value.length == 0) {
       ElMessage.error("改用户无导表权限")
     }
 
@@ -188,7 +202,6 @@ const getTableField = () => {
     name.value = Array.from(map.values())
     data.value = generateData();
     columns.value = generateColumnConfig();
-    console.log("表格字段:", columns.value)
 
   })
 }
@@ -207,7 +220,6 @@ const handleSizeChange = (val) => {
 const handleCurrentChange = async (val) => {
   currentPage.value = val
   await getYaanCasualtiesList()
-  console.log("当前页数据", tableData.value)
 }
 
 const generateData = _ => {
@@ -285,5 +297,6 @@ const clearSelection = () => {
 ::v-deep .el-input__inner {
   font-size: 16px;
 }
+
 </style>
 
