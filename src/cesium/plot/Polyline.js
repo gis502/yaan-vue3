@@ -17,10 +17,13 @@ export default class Polyline {
     this.typeName = null
     this.img = null
     this.eqid = null
+    this.resolve = null
+    this.timestampArr = []
   }
 
   //激活
-  activate(material,typeName,img,eqid) {
+  activate(material,typeName,img,eqid,resolve) {
+    this.resolve = resolve
     this.eqid = eqid
     this.img = img
     this.typeName = typeName
@@ -76,6 +79,9 @@ export default class Polyline {
       that.positions.push(position);
       let p = that.createPoint(position)
       that.pointLinePoint.push(p)
+      // 生成线上每个点的生成时间，用于situationplot中的time
+      let timestampe = new Date().getTime()
+      that.timestampArr.push(timestampe)
       if (that.positions.length === 1) {
         that.generatePolyline();
       }
@@ -128,22 +134,29 @@ export default class Polyline {
     if(that.typeName==="地裂缝"||that.typeName==="可用供水管网"||that.typeName==="不可用供水管网"){
       img = this.img
     }
-    this.ws.send(JSON.stringify({
-      type: "polyline",
-      operate: "add",
-      data: {
-        id: that.initId,
-        type:that.typeName,
-        positions: that.positions,
-        img: img,
-        eqid: that.eqid
-      }
-    }))
+    let data = {
+      timestampArr:this.timestampArr,
+      pointPosArr:this.positions
+    }
+    this.resolve(data)
+    // this.ws.send(JSON.stringify({
+    //   type: "polyline",
+    //   operate: "add",
+    //   data: {
+    //     id: that.initId,
+    //     type:that.typeName,
+    //     positions: that.positions,
+    //     img: img,
+    //     eqid: that.eqid
+    //   }
+    // }))
     this.status = 0
     this.pointLinePoint = []
     this.drawEntity.remove = () => {
       this.viewer.entities.remove(this.drawEntity);
     }
+
+    this.timestampArr = []
     this.deactivate();
   }
 

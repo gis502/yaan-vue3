@@ -71,6 +71,12 @@
         @drawPoint="drawPoint"
         @clearMarkDialogForm="resetAddMarkCollection"
     />
+    <addPolylineDialog
+        :addPolylineDialogFormVisible="addPolylineDialogFormVisible"
+        @wsSendPoint="wsSendPoint"
+        @drawPoint="drawPoint"
+        @clearMarkDialogForm="resetAddMarkCollection"
+    />
     <commonPanel
         :visible="popupVisible"
         :position="popupPosition"
@@ -92,12 +98,13 @@ import {getAllEq} from '@/api/system/eqlist'
 import {initWebSocket} from '@/cesium/WS.js'
 import cesiumPlot from '@/cesium/plot/cesiumPlot'
 import addMarkCollectionDialog from "@/components/Cesium/addMarkCollectionDialog"
+import addPolylineDialog from "@/components/Cesium/addPolylineDialog.vue"
 import commonPanel from "@/components/Cesium/CommonPanel";
 import {useCesiumStore} from '@/store/modules/cesium.js'
 
 export default {
   components: {
-    addMarkCollectionDialog, commonPanel,//CesiumDraw
+    addMarkCollectionDialog, commonPanel,addPolylineDialog,//CesiumDraw
   },
   data: function () {
     return {
@@ -105,7 +112,8 @@ export default {
       typeList: null,// 点标注控件根据此数据生成
       refenceTypeList: null,//用来对照弹窗中类型的中文
       message: null, // 添加点标绘的时候的弹窗相关
-      addMarkDialogFormVisible: false, // 标绘信息填写对话框的显示和隐藏
+      addMarkDialogFormVisible: false, // dian标绘信息填写对话框的显示和隐藏
+      addPolylineDialogFormVisible:false,// xian标绘信息填写对话框的显示和隐藏
       showMarkCollection: false, // 点标绘控件的显示和隐藏
       openAddStatus: true, // 用来控制添加billboard按钮的状态，点一次后只有添加完点才能再点击
       //-----------弹窗部分--------------
@@ -184,10 +192,11 @@ export default {
     // 生成实体点击事件的handler
     this.entitiesClickPonpHandler()
     this.watchTerrainProviderChanged()
-    // 干四件事获取地震列表、获取最新地震的eqid、设置websocket的eqid、渲染已有的标绘
-    this.getEq()
     // 获取标绘图片
     this.getPlotPicture()
+    // 干四件事获取地震列表、获取最新地震的eqid、设置websocket的eqid、渲染已有的标绘
+    this.getEq()
+
 
   },
   destroyed() {
@@ -363,6 +372,16 @@ export default {
       this.eqid = row.eqid
       this.websock.eqid = this.eqid
       this.initPlot(row.eqid)
+      window.viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(parseFloat(row.longitude),parseFloat(row.latitude),500),
+        orientation: {
+          // 指向
+          heading: 6.283185307179581,
+          // 视角
+          pitch: -1.5688168484696687,
+          roll: 0.0
+        }
+      });
     },
     // 获取地震列表、以及最新地震的eqid、并渲染已有的标绘
     getEq() {
@@ -375,7 +394,6 @@ export default {
           data.push(item)
         }
         that.getEqData = data
-        // that.getEqData = res
         that.total = res.length
         that.tableData = that.getPageArr()
         that.eqid = that.tableData[0].eqid
@@ -474,10 +492,36 @@ export default {
     },
 
     treeItemClick(item) {
+      let that = this
       if (item.plotType === '点图层') {
         this.openPointPop(item.name, item.img)
       } else if (item.plotType === '线图层') {
-        this.drawPolyline(item)
+        new Promise((resolve, reject) => {
+          this.drawPolyline(item,resolve)
+        }).then((res)=>{
+          // console.log(res,item)
+          let situationPlotData = []// situationplot表中的线数据
+          let plotid = that.guid()
+          for(let i=0;i<res.pointPosArr.length;i++){
+            let cartographic = Cesium.Cartographic.fromCartesian(res.pointPosArr[i]);
+            let latitude = Cesium.Math.toDegrees(cartographic.latitude);
+            let longitude = Cesium.Math.toDegrees(cartographic.longitude);
+            let height = Cesium.Math.toDegrees(cartographic.height);
+            let plotItem = {
+              eqid: that.eqid,
+              plotid,
+              time: res.timestampArr[i],
+              plottype: item.name,
+              drawtype: "线图层",
+              img:item.img,
+              latitude,
+              longitude,
+              height,
+            }
+            situationPlotData.push(plotItem)
+          }
+          this.openPolylinePop(item.name,situationPlotData)
+        })
       } else {
         this.drawPolygon(item)
       }
@@ -529,9 +573,29 @@ export default {
     },
 
     //------------线------------
-
-    drawPolyline(info) {
-      cesiumPlot.drawActivatePolyline(info.name, info.img, this.eqid)
+    openPolylinePop(plottype,situationPlotData){
+      let that = this
+      let cesiumStore = useCesiumStore()
+      if (this.openAddStatus) {
+        // 1-1 更改添加点标注按钮状态
+        this.openAddStatus = !this.openAddStatus
+        // 1-2 提示弹窗
+        // this.message = ElMessage({
+        //   message: '请点击地图添加标注点',
+        //   type: 'info',
+        //   duration: 0
+        // })
+        cesiumStore.setPolyilneInfo({plottype,situationPlotData})
+        that.addPolylineDialogFormVisible = true
+        // 1-3 生成点标注的handler
+        // cesiumPlot.initPointHandler(type, img, this.eqid).then(res => {
+        //   that.addMarkDialogFormVisible = true
+        //   this.message.close(that.addMarkDialogFormVisible)
+        // })
+      }
+    },
+    drawPolyline(info,resolve) {
+      cesiumPlot.drawActivatePolyline(info.name, info.img, this.eqid,resolve)
     },
     // 画线
     drawN() {
@@ -543,6 +607,8 @@ export default {
       cesiumPlot.deletePolyline(polyline)
       this.showPolyline = false
     },
+
+
 
     //------------面-------------
 
@@ -601,6 +667,30 @@ export default {
         }
       });
     },
+    timestampToTime(timestamp) {
+      let DateObj = new Date(timestamp)
+      // 将时间转换为 XX年XX月XX日XX时XX分XX秒格式
+      let year = DateObj.getFullYear()
+      let month = DateObj.getMonth() + 1
+      let day = DateObj.getDate()
+      let hh = DateObj.getHours()
+      let mm = DateObj.getMinutes()
+      let ss = DateObj.getSeconds()
+      month = month > 9 ? month : '0' + month
+      day = day > 9 ? day : '0' + day
+      hh = hh > 9 ? hh : '0' + hh
+      mm = mm > 9 ? mm : '0' + mm
+      ss = ss > 9 ? ss : '0' + ss
+      // return `${year}年${month}月${day}日${hh}时${mm}分${ss}秒`
+      return `${year}-${month}-${day} ${hh}:${mm}:${ss}`
+    },
+    guid() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        let r = Math.random() * 16 | 0,
+            v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
   }
 }
 </script>

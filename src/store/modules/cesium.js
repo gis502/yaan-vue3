@@ -2,16 +2,6 @@ import {ref, reactive, computed} from "vue";
 
 export const useCesiumStore = defineStore('cesium', () => {
         const pointInfo = reactive({
-            // lat: null,
-            // lon: null,
-            // height: null,
-            // img: null,
-            // type: null,
-            // id: null,
-            // eqid: null,
-            // time: null,
-            // name: null,
-            // describe: null,
             eqid: null,
             plotid: null,
             time: null,
@@ -22,15 +12,15 @@ export const useCesiumStore = defineStore('cesium', () => {
             img: null,
         })
 
-        function getPointInfo1(){
+        function getPointInfo1() {
             return {
-                eqid:pointInfo.eqid,
-                plotid:pointInfo.plotid,
-                plottype:pointInfo.plottype,
-                latitude:pointInfo.latitude,
-                longitude:pointInfo.longitude,
-                height:pointInfo.height,
-                img:pointInfo.img,
+                eqid: pointInfo.eqid,
+                plotid: pointInfo.plotid,
+                plottype: pointInfo.plottype,
+                latitude: pointInfo.latitude,
+                longitude: pointInfo.longitude,
+                height: pointInfo.height,
+                img: pointInfo.img,
             }
         }
 
@@ -44,8 +34,7 @@ export const useCesiumStore = defineStore('cesium', () => {
             pointInfo.img = info.img
         }
 
-
-        function clearData(){
+        function clearData() {
             pointInfo.eqid = null
             pointInfo.plotid = null
             pointInfo.plottype = null
@@ -55,6 +44,36 @@ export const useCesiumStore = defineStore('cesium', () => {
             pointInfo.img = null
         }
 
-        return {pointInfo,getPointInfo1, setPointInfo1, clearData}
+        const polyilneInfo = reactive({
+            plottype: null,
+            situationPlotData: null
+        })
+
+        function getPolyilneInfo() {
+            return {
+                plottype: polyilneInfo.plottype,
+                situationPlotData: polyilneInfo.situationPlotData
+            }
+        }
+
+        function setPolyilneInfo(info) {
+            polyilneInfo.plottype = info.plottype
+            polyilneInfo.situationPlotData = info.situationPlotData
+        }
+
+        function clearPolyilneInfo() {
+            polyilneInfo.plottype = null
+            polyilneInfo.situationPlotData = null
+        }
+
+        return {
+            pointInfo,
+            getPointInfo1,
+            setPointInfo1,
+            clearData,
+            getPolyilneInfo,
+            setPolyilneInfo,
+            clearPolyilneInfo
+        }
     }
 )
