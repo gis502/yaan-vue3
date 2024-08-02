@@ -1,7 +1,7 @@
 {
   "name": "ruoyi",
   "version": "3.8.8",
-  "description": "若依管理系统",
+  "description": "雅安",
   "author": "若依",
   "license": "MIT",
   "type": "module",
@@ -28,6 +28,7 @@
     "file-saver": "2.0.5",
     "fuse.js": "6.6.2",
     "html2canvas": "^1.4.1",
+    "idb": "^8.0.0",
     "js-cookie": "3.0.5",
     "jsencrypt": "3.3.2",
     "jspdf": "^2.5.1",

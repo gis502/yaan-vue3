@@ -56,4 +56,13 @@
         }
       }
 ```
+package.json中使用`--force`
+```javascript
+"scripts": {
+    "dev": "vite --force",
+    "build:prod": "vite build",
+    "build:stage": "vite build --mode staging",
+    "preview": "vite preview"
+  },
+```
 部分里的'%2B': '+'改为'%2B': '%2B',该文件中有两个encode,均需要修改

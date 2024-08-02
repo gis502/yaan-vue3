@@ -54,6 +54,7 @@ export default {
   watch: {
     visible() {
       this.visiblePanel = this.visible;
+      console.log(this.visiblePanel,234)
     },
     popupData: {
       deep: true,

@@ -5,12 +5,12 @@
       <el-form-item label="标注类型" :label-width="100">
         <el-input placeholder="请输入内容" v-model="form.type" :disabled="true" size="large"/>
       </el-form-item>
-      <el-form-item label="经度" :label-width="100">
-        <el-input v-model="form.lon" autocomplete="off" size="large"/>
-      </el-form-item>
-      <el-form-item label="纬度" :label-width="100">
-        <el-input v-model="form.lat" autocomplete="off" size="large"/>
-      </el-form-item>
+<!--      <el-form-item label="经度" :label-width="100">-->
+<!--        <el-input v-model="form.lon" autocomplete="off" size="large"/>-->
+<!--      </el-form-item>-->
+<!--      <el-form-item label="纬度" :label-width="100">-->
+<!--        <el-input v-model="form.lat" autocomplete="off" size="large"/>-->
+<!--      </el-form-item>-->
       <el-form-item label="开始时间" :label-width="100">
         <div class="formTime">
           <el-date-picker
@@ -83,17 +83,18 @@ export default {
     }
   },
   props: [
-    'addMarkDialogFormVisible'
+    'addPolylineDialogFormVisible'
   ],
   watch: {
-    addMarkDialogFormVisible() {
+    addPolylineDialogFormVisible() {
       // 1-1 显示弹窗
-      this.DialogFormVisible = this.addMarkDialogFormVisible
+      this.DialogFormVisible = this.addPolylineDialogFormVisible
       // 2-1 获取pinia中存的经纬度、标绘类型等信息以及生成对应类型的dialog
       let cesiumStore = useCesiumStore()
-      if(this.addMarkDialogFormVisible){
+      if(this.addPolylineDialogFormVisible){
         // 2-2 获取pinia中数据
-        this.form = cesiumStore.getPointInfo1()
+        // this.form = cesiumStore.getPointInfo1()
+        this.form = cesiumStore.getPolyilneInfo()
         // 2-3 生成对应类型的dialog
         for (let item in plotType) {
           if (this.form.plottype === plotType[item].name) {
@@ -135,7 +136,6 @@ export default {
         this.endtime = null
       })
     },
-
     // 组装成发送请求的数据形式
     assembleData(data1,data2,starttime,endtime){
       let assemblyData = {
@@ -177,7 +177,6 @@ export default {
 
       return assemblyData
     },
-
     // 时间戳转换成日期格式，将时间戳转换成 xx年xx月xx日xx时xx分xx秒格式
     timestampToTime(timestamp) {
       let DateObj = new Date(timestamp)

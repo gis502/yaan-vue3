@@ -20,7 +20,7 @@
                     <span style="margin-left: 10px;font-size: 16px">
                       {{("" + activity.starttime).match('-')
                             ? activity.starttime
-                            : (activity.starttime !== null ? timestampToTime(parseInt(activity.starttime)) : "") }}
+                            : (activity.starttime !== null ? activity.starttime : "") }}
                     </span>
                     <!--                    <span style="margin-left: 20px">自定义内容 </span>-->
                   </div>
@@ -37,7 +37,7 @@
                         <el-text v-if="activity.aditStatus" size="large">{{
                             ("" + activity.starttime).match('-')
                                 ? activity.starttime
-                                : (activity.starttime !== null ? timestampToTime(parseInt(activity.starttime)) : "")
+                                : (activity.starttime !== null ? activity.starttime : "")
                           }}</el-text>
                         <el-date-picker
                             v-if="!activity.aditStatus"
@@ -59,7 +59,7 @@
                         <el-text v-if="activity.aditStatus" size="large">{{
                             ("" + activity.endtime).match('-')
                                 ? activity.endtime
-                                : (activity.endtime !== null ? timestampToTime(parseInt(activity.endtime)) : "")
+                                : (activity.endtime !== "" ? activity.endtime : "")
                           }}</el-text>
                         <el-date-picker
                             v-if="!activity.aditStatus"
@@ -191,7 +191,7 @@ export default {
         // popupPanelData是空，判断一定时false，造成第一次点击弹窗无法渲染对应标绘的html模板。
         // 可能时因为开启深度监听的原因（deep: true）。
         if (this.visiblePanel) {
-          console.log(this.popupPanelData.plotid,1222)
+          console.log(this.popupPanelData,1222)
           this.getPlotInfo(this.popupPanelData.plotid)
         }
       }
@@ -216,8 +216,8 @@ export default {
       activity.aditStatus = !activity.aditStatus
       // 把做时间戳转换成yyyy-mm-dd hh:mm:ss格式，这样在修改界面的el-date-picker就不会显示时间轴了
       // 然后在updataPlotInfo中提交时再把yyyy-mm-dd hh:mm:ss格式转成时间轴存库
-      activity.starttime = this.timestampToTime(parseInt(activity.starttime))//new Date(activity.starttime).getTime();
-      activity.endtime = this.timestampToTime(parseInt(activity.endtime))//new Date(activity.endtime).getTime();
+      activity.starttime = this.timestampToTime(activity.starttime)//new Date(activity.starttime).getTime();
+      activity.endtime = this.timestampToTime(activity.endtime)//new Date(activity.endtime).getTime();
     },
     // 提交修改的标绘信息
     updataPlotInfo(activity) {
@@ -285,7 +285,6 @@ export default {
       addPlotInfo(data).then(res => {
         that.getPlotInfo(that.popupPanelData.plotid)
         that.addStatus = !this.addStatus
-        this.activeNames[0] = []
       })
     },
     // 点击标绘点后获取此标绘点的所有标绘信息
@@ -303,8 +302,12 @@ export default {
             id: null,
             aditStatus: true,
           }
-          item.starttime = res[i].starttime //? that.timestampToTime(parseInt(res[i].starttime)) : '无'
-          item.endtime = res[i].endtime //? that.timestampToTime(parseInt(res[i].endtime)) : '无'
+          item.starttime = that.timestampToTime(res[i].starttime)
+          if(res[i].endtime === null){
+            item.endtime = ""
+          }else{
+            item.endtime = that.timestampToTime(res[i].endtime)
+          }
           item.info = JSON.parse(res[i].info)
           item.id = res[i].id
           that.plotInfoActivities.push(item)

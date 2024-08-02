@@ -13,6 +13,7 @@
 </template>
 
 <script>
+
 import * as Cesium from 'cesium'
 // import 'cesium/Source/Widgets/widgets.css'
 import CesiumNavigation from "cesium-navigation-es6";
@@ -28,10 +29,15 @@ import { initWebSocket } from '@/cesium/WS.js'
 import {getDisasterReserves} from "../../../api/system/emergency.js";
 import disasterReliefMaterialReserve from '@/assets/images/disasterReliefMaterialReserve.png';
 import {getWay} from "@/api/system/routeplan.js";
+import addMarkCollectionDialog from "@/components/Cesium/addMarkCollectionDialog.vue";
+import commonPanel from "@/components/Cesium/CommonPanel.vue";
 
 
 export default {
   name: "index",
+  components: {
+    RouterPanel,
+  },
   data() {
     return {
       pos: [],
@@ -45,12 +51,12 @@ export default {
   },
   mounted() {
     this.init();
-    // this.entitiesClickPonpHandler()
+    this.entitiesClickPonpHandler()
     // this.watchTerrainProviderChanged();
-    // cesiumPlot.init(window.viewer, this.websock, this.$store)
-    // console.log(" this.$router.currentRoute11111111:", this.$router.currentRoute)
-    // this.initPlot(this.id)
-    // this.initWebsocket()
+    cesiumPlot.init(window.viewer, this.websock, this.$store)
+    console.log(" this.$router.currentRoute11111111:", this.$router.currentRoute)
+    this.initPlot(this.id)
+    this.initWebsocket()
     //---------------------------
   },
   methods:{
