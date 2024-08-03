@@ -9,66 +9,38 @@
       <el-button class="el-button--primary" @click="emergencyResourceInformation">应急资源信息</el-button>
     </el-form>
     <RouterPanel :visible="popupVisible" :position="popupPosition" :popupData="popupData" @wsSendPoint="wsSendPoint"/>
-      <div id="supplies">-->
-          <!--          <el-form class="eqTable">-->
-          <!--              <div style="margin-bottom: 10px;">-->
-          <!--                  <el-input v-model="inputRadius" placeholder="请输入搜查范围/km"-->
-          <!--                            style="width: 170px;margin-right: 5px;" clearable>-->
-          <!--                  </el-input>-->
-          <!--                  <el-button class="el-button&#45;&#45;primary" @click="searchSupply">查找物资</el-button>-->
-          <!--                  <el-button class="el-button&#45;&#45;primary" @click="addSupplyPoint">添加物资点</el-button>-->
-          <!--                  <el-button class="el-button&#45;&#45;primary" @click="showAllSupplyPoints">显示所有物资点</el-button>-->
-          <!--              </div>-->
+    <div id="supplies">
+        <el-form class="eqTable">
+            <div style="margin-bottom: 10px;">
+                <el-input v-model="inputRadius" placeholder="请输入搜查范围/km"
+                          style="width: 170px;margin-right: 5px;" clearable>
+                </el-input>
+                <el-button class="el-button--primary" @click="searchSupply">查找物资</el-button>
+                <el-button class="el-button--primary" @click="addDisasterPoint">添加受灾点</el-button>
+                <el-button class="el-button--primary" @click="showAllSupplyPoints">显示所有物资点</el-button>
+            </div>
 
-          <!--              <el-table :data="showSuppliesList" style="width: 100%;margin-bottom: 5px;text-align: center" :stripe="true"-->
-          <!--                        :header-cell-style="tableHeaderColor"-->
-          <!--                        :cell-style="tableColor"-->
-          <!--                        :row-style="{height: '40px'}"-->
-          <!--                        @row-click="showSupplyPoint"-->
-          <!--              >-->
-          <!--                  <el-table-column prop="position" label="位置" width="50"></el-table-column>-->
-          <!--                  <el-table-column prop="type" label="物资种类" width="150"></el-table-column>-->
-          <!--                  <el-table-column prop="count" label="数量" width="100"></el-table-column>-->
-          <!--                  <el-table-column prop="tel" label="联系电话"></el-table-column>-->
+            <el-table :data="showSuppliesList" style="width: 100%;margin-bottom: 5px;text-align: center" :stripe="true"
+                      :header-cell-style="tableHeaderColor" :cell-style="tableColor"
+                      :row-style="{height: '40px'}"
+                      @row-click="showSupplyPoint"
+            >
+                <el-table-column prop="county" label="区域" width="100"></el-table-column>
+                <el-table-column prop="address" label="地址" width="200"></el-table-column>
+                <el-table-column prop="contactPerson" label="联系人" width="100"></el-table-column>
+                <el-table-column prop="contactPhone" label="联系电话"></el-table-column>
 
-          <!--              </el-table>-->
-          <!--              <el-pagination-->
-          <!--                      @size-change="handleSizeChange"-->
-          <!--                      @current-change="handleCurrentChange"-->
-          <!--                      :current-page="currentPage"-->
-          <!--                      :page-size="pageSize"-->
-          <!--                      layout="total, prev, pager, next, jumper"-->
-          <!--                      :total="total">-->
-          <!--              </el-pagination>-->
-          <!--          </el-form>-->
-          <!--      </div>-->
-          <!--      <el-dialog class="dialogDiv" :visible.sync="DialogFormVisible" title="添加标注信息" width="500"-->
-          <!--                 :close-on-click-modal="false" :destroy-on-close="true" :show-close="false">-->
-          <!--          <el-form :model="this.addSupplyPointCurrently">-->
-          <!--              <el-form-item label="位置" :label-width="formLabelWidth">-->
-          <!--                  <el-input v-model="addSupplyPointCurrently.position" autocomplete="off"/>-->
-          <!--              </el-form-item>-->
-          <!--              <el-form-item label="物资种类" :label-width="formLabelWidth">-->
-          <!--                  <el-input v-model="addSupplyPointCurrently.type" autocomplete="off"/>-->
-          <!--              </el-form-item>-->
-          <!--              <el-form-item label="数量" :label-width="formLabelWidth">-->
-          <!--                  <el-input v-model="addSupplyPointCurrently.count" autocomplete="off"/>-->
-          <!--              </el-form-item>-->
-          <!--              <el-form-item label="联系电话" :label-width="formLabelWidth">-->
-          <!--                  <el-input v-model="addSupplyPointCurrently.tel" autocomplete="off"/>-->
-          <!--              </el-form-item>-->
-          <!--              <el-form-item label="经度" :label-width="formLabelWidth">-->
-          <!--                  <el-input v-model="addSupplyPointCurrently.lng" autocomplete="off" readonly />-->
-          <!--              </el-form-item>-->
-          <!--              <el-form-item label="维度" :label-width="formLabelWidth">-->
-          <!--                  <el-input v-model="addSupplyPointCurrently.lat" autocomplete="off" readonly />-->
-          <!--              </el-form-item>-->
-          <!--          </el-form>-->
-          <!--          <div slot="footer" class="dialog-footer">-->
-          <!--              <el-button type="primary" @click="cancelAddSupplyPoint">取消</el-button>-->
-          <!--              <el-button type="primary" @click="commitAddSupplyPoint">确认</el-button>-->
-          <!--          </div>-->
-          <!--      </el-dialog>-->
+            </el-table>
+            <el-pagination
+                    @size-change="handleSizeChange"
+                    @current-change="handleCurrentChange"
+                    :current-page="currentPage"
+                    :page-size="pageSize"
+                    layout="total, prev, pager, next, jumper"
+                    :total="total">
+            </el-pagination>
+        </el-form>
+    </div>
   </div>
 </template>
 
@@ -96,8 +68,32 @@ export default {
   name: "index",
   data() {
     return {
+      viewer: null,
       pos: [],
       areas: [],
+
+      showSuppliesList: [],
+      selectedSuppliesList: [],
+      showIcon: [],
+      total: 0,
+      pageSize: 5,
+      currentPage: 1,
+      addSupplyPointCurrently:{
+          lng: 0,
+          lat: 0,
+          count: 0,
+          position: "",
+          type: "",
+          tel: ""
+      },
+      inputRadius: "",
+      canMarkPoint: false,
+      DialogFormVisible: false,
+      affectedPoints: [
+          { lng: 103.00589, lat: 29.97945, position: 'a'}
+      ],
+      suppliesList: [],
+
       //-----------弹窗部分-------------------
       selectedEntityHighDiy: null,
       popupPosition: {x: 0, y: 0}, // 弹窗显示位置，传值给子组件
@@ -121,6 +117,7 @@ export default {
       let viewer = initCesium(Cesium);
       viewer._cesiumWidget._creditContainer.style.display = 'none'; // 隐藏版权信息
       window.viewer = viewer;
+      this.viewer = viewer
       let options = {};
       options.defaultResetView = Cesium.Cartographic.fromDegrees(103.00, 29.98, 1500, new Cesium.Cartographic);
       options.enableCompass = true;
@@ -134,10 +131,40 @@ export default {
       document.getElementsByClassName('cesium-geocoder-input')[0].placeholder = '请输入地名进行搜索';
       document.getElementsByClassName('cesium-baseLayerPicker-sectionTitle')[0].innerHTML = '影像服务';
       document.getElementsByClassName('cesium-baseLayerPicker-sectionTitle')[1].innerHTML = '地形服务';
+
+
+      // this.showAllSupplyPoints()
+
+      this.clickCount += 1;
+
+      const ellipsoid = this.viewer.scene.globe.ellipsoid;
+      const canvas = this.viewer.scene.canvas;
+      const handler = new Cesium.ScreenSpaceEventHandler(canvas);
+
+      handler.setInputAction((movement) => {
+          const cartesian = this.viewer.camera.pickEllipsoid(movement.position, ellipsoid);
+          if (cartesian) {
+              const cartographic = ellipsoid.cartesianToCartographic(cartesian);
+              this.addSupplyPointCurrently.lat = Cesium.Math.toDegrees(cartographic.latitude).toFixed(5);
+              this.addSupplyPointCurrently.lng = Cesium.Math.toDegrees(cartographic.longitude).toFixed(5);
+
+              if(this.canMarkPoint){
+                  this.DialogFormVisible = true
+                  this.drawSite(this.addSupplyPointCurrently.lat, this.addSupplyPointCurrently.lng,
+                      this.clickCount, Cesium.Color.RED);
+                  this.canMarkPoint = false
+              }
+          }
+      }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+      // this.drawSite(Number(this.affectedPoints[0].lat), Number(this.affectedPoints[0].lng),
+      //     this.clickCount, Cesium.Color.RED);
     },
     initPlot(){
       getDisasterReserves().then(res=>{
         let data = res
+        this.suppliesList = data
+        this.showIcon = data
+        this.fetSupplyPoints()
         console.log("data",data)
         let pointArr = data.filter(e => e.longitude !== null)
         // console.log("pointArr",pointArr)
@@ -576,58 +603,234 @@ export default {
         };
       }
     },
+     // 绘制点
+     drawSite(lat, lng, id, color) {
+         const point = {
+             id: id,
+             position: Cesium.Cartesian3.fromDegrees(parseFloat(lng), parseFloat(lat)),
+         };
+         this.affectedPoints.push(point);
+
+         if (this.viewer) {
+             this.viewer.entities.add({
+                 position: point.position,
+                 point: {
+                     pixelSize: 10,
+                     color: color,
+                 },
+             });
+         }
+     },
+
+     fetSupplyPoints(){
+         this.selectedSuppliesList = this.suppliesList
+         this.total = this.selectedSuppliesList.length
+         this.showSuppliesList = this.getPageArr(this.selectedSuppliesList)
+         // console.log("this.showSuppliesList-",this.showSuppliesList)
+     },
+
+      showSupplyPoint(row){
+          // console.log("点击了：",row)
+          this.showIcon = []
+          this.showIcon.push(row)
+          this.removePoints(this.suppliesList)
+          this.drawPoint(this.showIcon)
+      },
+
+      removePoints(entityArr) {
+          entityArr.forEach(entity => {
+              let id = entity.id;
+              let existingEntity = window.viewer.entities.getById(id);
+              if (existingEntity) {
+                  window.viewer.entities.removeById(id);
+              } else {
+              }
+          });
+      },
+
+      showAllSupplyPoints(){
+        this.viewer.entities.values.forEach(entity => {
+            if (entity.ellipse) {
+                this.viewer.entities.remove(entity);
+            }
+        });
+        this.removePoints(this.showIcon)
+        this.drawPoint(this.suppliesList)
+      },
+
+      searchSupply(){
+          if(!isNaN(parseFloat(this.inputRadius))){
+              let longitude = parseFloat(this.addSupplyPointCurrently.lng);
+              let latitude = parseFloat(this.addSupplyPointCurrently.lat);
+              const clickPoint = Cesium.Cartesian3.fromDegrees(longitude, latitude);
+              this.selectedSuppliesList = [];
+              this.suppliesList.forEach((point, index) => {
+                  const pointLongitude = parseFloat(point.longitude);
+                  const pointLatitude = parseFloat(point.latitude);
+                  const initialPoint = Cesium.Cartesian3.fromDegrees(pointLongitude, pointLatitude);
+                  const distance = Cesium.Cartesian3.distance(clickPoint, initialPoint) / 1000; // 距离以公里为单位
+                  if (distance < this.inputRadius) {
+                      this.selectedSuppliesList.push(point);
+                  }
+              });
+              this.total = this.selectedSuppliesList.length
+              this.showSuppliesList = this.getPageArr(this.selectedSuppliesList)
+              this.removePoints(this.showIcon)
+              this.showIcon = this.selectedSuppliesList
+              this.drawPoint(this.showIcon)
+              this.selectPoints()
+          }
+      },
+      // 查询指定范围内的物资点
+      selectPoints() {
+          if (!isNaN(parseFloat(this.inputRadius))) {
+              // 确保 inputRadius 为数字类型  画圆的单位为m
+              const radius = parseFloat(this.inputRadius) * 1000;
+              // 将经纬度转换为 Cartesian3 类型
+              const position = Cesium.Cartesian3.fromDegrees(
+                  parseFloat(this.addSupplyPointCurrently.lng),
+                  parseFloat(this.addSupplyPointCurrently.lat)
+              );
+              this.viewer.entities.values.forEach(entity => {
+                  if (entity.ellipse) {
+                      this.viewer.entities.remove(entity);
+                  }
+              });
+              this.viewer.entities.add({
+                  position: position,
+                  ellipse: {
+                      semiMajorAxis: radius,
+                      semiMinorAxis: radius,
+                      material: Cesium.Color.GREEN.withAlpha(0.5),
+                  },
+              });
+          }
+      },
+      // 添加物资点
+      addDisasterPoint(){
+          this.canMarkPoint = true
+      },
+      getPageArr(arr){
+          let newArr = []
+          let start = (this.currentPage - 1) * this.pageSize
+          let end = this.currentPage * this.pageSize
+          if (end > this.total) {
+              end = this.total
+          }
+          for (; start < end; start++) {
+              newArr.push(arr[start])
+          }
+          return newArr
+      },
+      handleSizeChange(val) {
+          this.pageSize = val
+          this.showSuppliesList = this.getPageArr(this.selectedSuppliesList)
+      },
+      handleCurrentChange(val) {
+          this.currentPage = val
+          this.showSuppliesList = this.getPageArr(this.selectedSuppliesList)
+      },
+      tableHeaderColor() {
+          return {
+              'border-color': '#293038',
+              'background-color': '#293038 !important', // 此处是elemnetPlus的奇怪bug，header-cell-style中背景颜色不加!important不生效
+              'color': '#fff',
+              'padding': '0',
+              'text-align': 'center',
+          }
+      },
+      // 修改table header的背景色
+      tableColor({row, column, rowIndex, columnIndex}) {
+          if (rowIndex % 2 == 1) {
+              return {
+                  'border-color': '#313a44',
+                  'background-color': '#313a44',
+                  'color': '#fff',
+                  'padding': '0',
+                  'text-align': 'center'
+              }
+          } else {
+              return {
+                  'border-color': '#304156',
+                  'background-color': '#304156',
+                  'color': '#fff',
+                  'padding': '0',
+                  'text-align': 'center'
+              }
+          }
+      },
+
   }
 }
 </script>
 
 <style scoped>
-.cesium-viewer-navigationContainer {
-  display: none !important;
-}
-.tool-container {
-  position: absolute;
-  padding: 15px;
-  border-radius: 5px;
-  top: 10px;
-  left: 10px;
-  z-index: 10;
-  background-color: rgba(40, 40, 40, 0.7);
-}
-#cesiumContainer {
-  height: 100%;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-}
-.eqListfade-enter-active, .eqListfade-leave-active {
-  transition: opacity .5s;
-}
-.eqListfade-enter, .eqListfade-leave-to {
-  opacity: 0;
-}
-.button-container {
-  position: absolute;
-  padding: 15px;
-  border-radius: 5px;
-  top: 10px;
-  left: 10px;
-  z-index: 10;
-  background-color: rgba(40, 40, 40, 0.7);
-}
-.latlon-legend {
-  pointer-events: auto;
-  position: absolute;
-  border-radius: 15px;
-  padding-left: 5px;
-  padding-right: 5px;
-  bottom: 30px;
-  height: 30px;
-  width: 125px;
-  box-sizing: content-box;
-}
-.modelAdj {
-  color: white;
-  margin-bottom: 15px;
-}
+    .cesium-viewer-navigationContainer {
+        display: none !important;
+    }
+    .tool-container {
+        position: absolute;
+        padding: 15px;
+        border-radius: 5px;
+        /*width: 500px;*/
+        /*height: 200px;*/
+        top: 10px;
+        left: 10px;
+        z-index: 10; /* 更高的层级 */
+        background-color: rgba(40, 40, 40, 0.7);
+    }
+    #cesiumContainer {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+    #supplies{
+        position: absolute;
+        padding: 15px;
+        border-radius: 5px;
+        /*width: 500px;*/
+        /*height: 200px;*/
+        top: 80px;
+        left: 10px;
+        width: 36rem;
+        z-index: 10; /* 更高的层级 */
+        background-color: rgba(40, 40, 40, 0.7);
+    }
+
+    .eqListfade-enter-active, .eqListfade-leave-active {
+        transition: opacity .5s;
+    }
+
+    .eqListfade-enter, .eqListfade-leave-to {
+        opacity: 0;
+    }
+
+    .button-container {
+        position: absolute;
+        padding: 15px;
+        border-radius: 5px;
+        top: 10px;
+        left: 10px;
+        z-index: 10; /* 更高的层级 */
+        background-color: rgba(40, 40, 40, 0.7);
+    }
+
+    .latlon-legend {
+        pointer-events: auto;
+        position: absolute;
+        border-radius: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        bottom: 30px;
+        height: 30px;
+        width: 125px;
+        box-sizing: content-box;
+    }
+
+    .modelAdj {
+        color: white;
+        margin-bottom: 15px;
+    }
 </style>
