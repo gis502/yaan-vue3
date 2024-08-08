@@ -1,6 +1,6 @@
 <template>
   <div id="cesiumContainer">
-    <el-form class="tool-container">
+    <el-form class="route-tool-container">
       <el-button class="el-button--primary" @click="route">路径规划</el-button>
       <el-button class="el-button--primary" @click="addArea">添加障碍区域</el-button>
       <el-button class="el-button--primary" @click="removeAll">清空所有实体</el-button>
@@ -59,6 +59,7 @@ import cesiumPlot from '@/cesium/plot/cesiumPlot.js'
 import { initWebSocket } from '@/cesium/WS.js'
 import {getDisasterReserves} from "../../../api/system/emergency.js";
 import disasterReliefMaterialReserve from '@/assets/images/disasterReliefMaterialReserve.png';
+import {getWay} from "@/api/system/routeplan.js";
 
 
 export default {
@@ -103,12 +104,12 @@ export default {
   },
   mounted() {
     this.init();
-    this.entitiesClickPonpHandler()
-    this.watchTerrainProviderChanged();
-    cesiumPlot.init(window.viewer, this.websock, this.$store)
-    console.log(" this.$router.currentRoute11111111:", this.$router.currentRoute)
-    this.initPlot(this.id)
-    this.initWebsocket()
+    // this.entitiesClickPonpHandler()
+    // this.watchTerrainProviderChanged();
+    // cesiumPlot.init(window.viewer, this.websock, this.$store)
+    // console.log(" this.$router.currentRoute11111111:", this.$router.currentRoute)
+    // this.initPlot(this.id)
+    // this.initWebsocket()
     //---------------------------
   },
   methods: {
@@ -174,21 +175,31 @@ export default {
     },
     drawPoint(pointArr) {
       pointArr.forEach(element => {
-        // 检查是否已存在具有相同ID的实体
-        let existingEntity = window.viewer.entities.getById(element.id);
-        if (existingEntity) {
-          console.warn(`Entity with id ${element.id} already exists. Skipping this entity.`);
-          return; // 跳过这个实体
-        }
+            // 检查是否已存在具有相同ID的实体
+            let existingEntity = window.viewer.entities.getById(element.id);
+            if (existingEntity) {
+              console.warn(`Entity with id ${element.id} already exists. Skipping this entity.`);
+              return; // 跳过这个实体
+            }
 
-        // 检查经度、纬度和高度是否为有效数值
-        let longitude = Number(element.longitude);
-        let latitude = Number(element.latitude);
+            // 检查经度、纬度和高度是否为有效数值
+            let longitude = Number(element.longitude);
+            let latitude = Number(element.latitude);
 
-        if (isNaN(longitude) || isNaN(latitude)) {
-          console.error(`Invalid coordinates for entity with id ${element.id}:`, { longitude, latitude});
-          return; // 跳过无效坐标的实体
-        }
+            if (isNaN(longitude) || isNaN(latitude)) {
+              console.error(`Invalid coordinates for entity with id ${element.id}:`, { longitude, latitude});
+              return; // 跳过无效坐标的实体
+            }
+      // 添加路网
+      // viewer.dataSources.add(
+      //   Cesium.GeoJsonDataSource.load(
+      //     geojsonmap,
+      //     {
+      //       stroke: Cesium.Color.RED,   // 边框颜色
+      //       // fill: Cesium.Color.RED.withAlpha(0.5),  // 填充颜色
+      //       strokeWidth: 3, // 边框宽度
+      //     })
+      // );
 
         // 检查经度和纬度是否在合理范围内
         if (longitude < -180 || longitude > 180 || latitude < -90 || latitude > 90) {
@@ -307,15 +318,9 @@ export default {
           propertiesId.push(billBoardId)
         }
         if(that.pos.length===2){
-          axios.post('http://192.168.0.107:8089/map_test/way', { // 'http://127.0.0.1:8089/map_test/way'
-            pathWay:that.pos,
-            hardAreas:that.areas
-          }).then(function (response) {
-            console.log(response.data,123)
-            that.polylineD(response.data.path,propertiesId)
+          getWay({pathWay:that.pos, hardAreas:that.areas}).then(res=>{
+            that.polylineD(res.path,propertiesId)
             that.pos = []
-          }).catch(err=>{
-            alert("无可行路径")
           })
           handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
         }
@@ -377,9 +382,9 @@ export default {
         id:billBoardId,
         position: position,
         billboard: {
-          image: disasterReliefMaterialReserve,
-          width: 25,//图片宽度,单位px
-          height: 25,//图片高度，单位px
+          image: img,
+          // width: 25,//图片宽度,单位px
+          // height: 25,//图片高度，单位px // 会影响point大小，离谱
           // eyeOffset: new Cesium.Cartesian3(-1, 1, 0),//与坐标位置的偏移距离
           heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,// 绑定到地形高度,让billboard贴地
           depthTest: false,//禁止深度测试但是没有下面那句有用
@@ -765,72 +770,72 @@ export default {
 </script>
 
 <style scoped>
-    .cesium-viewer-navigationContainer {
-        display: none !important;
-    }
-    .tool-container {
-        position: absolute;
-        padding: 15px;
-        border-radius: 5px;
-        /*width: 500px;*/
-        /*height: 200px;*/
-        top: 10px;
-        left: 10px;
-        z-index: 10; /* 更高的层级 */
-        background-color: rgba(40, 40, 40, 0.7);
-    }
-    #cesiumContainer {
-        height: 100%;
-        width: 100%;
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-    }
-    #supplies{
-        position: absolute;
-        padding: 15px;
-        border-radius: 5px;
-        /*width: 500px;*/
-        /*height: 200px;*/
-        top: 80px;
-        left: 10px;
-        width: 36rem;
-        z-index: 10; /* 更高的层级 */
-        background-color: rgba(40, 40, 40, 0.7);
-    }
+.cesium-viewer-navigationContainer {
+  display: none !important;
+}
+.route-tool-container {
+  position: absolute;
+  padding: 15px;
+  border-radius: 5px;
+  /*width: 500px;*/
+  /*height: 200px;*/
+  top: 10px;
+  left: 10px;
+  z-index: 10; /* 更高的层级 */
+  background-color: rgba(40, 40, 40, 0.7);
+}
+#cesiumContainer {
+  height: calc(100vh - 50px);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
 
-    .eqListfade-enter-active, .eqListfade-leave-active {
-        transition: opacity .5s;
-    }
+.eqListfade-enter-active, .eqListfade-leave-active {
+  transition: opacity .5s;
+}
 
-    .eqListfade-enter, .eqListfade-leave-to {
-        opacity: 0;
-    }
+.eqListfade-enter, .eqListfade-leave-to {
+  opacity: 0;
+}
+#supplies{
+    position: absolute;
+    padding: 15px;
+    border-radius: 5px;
+    /*width: 500px;*/
+    /*height: 200px;*/
+    top: 80px;
+    left: 10px;
+    width: 36rem;
+    z-index: 10; /* 更高的层级 */
+    background-color: rgba(40, 40, 40, 0.7);
+}
 
-    .button-container {
-        position: absolute;
-        padding: 15px;
-        border-radius: 5px;
-        top: 10px;
-        left: 10px;
-        z-index: 10; /* 更高的层级 */
-        background-color: rgba(40, 40, 40, 0.7);
-    }
+.button-container {
+  position: absolute;
+  padding: 15px;
+  border-radius: 5px;
+  top: 10px;
+  left: 10px;
+  z-index: 10; /* 更高的层级 */
+  background-color: rgba(40, 40, 40, 0.7);
+}
 
-    .latlon-legend {
-        pointer-events: auto;
-        position: absolute;
-        border-radius: 15px;
-        padding-left: 5px;
-        padding-right: 5px;
-        bottom: 30px;
-        height: 30px;
-        width: 125px;
-        box-sizing: content-box;
-    }
+.latlon-legend {
+  pointer-events: auto;
+  position: absolute;
+  border-radius: 15px;
+  padding-left: 5px;
+  padding-right: 5px;
+  bottom: 30px;
+  height: 30px;
+  width: 125px;
+  box-sizing: content-box;
+}
 
-    .modelAdj {
-        color: white;
-        margin-bottom: 15px;
-    }
+.modelAdj {
+  color: white;
+  margin-bottom: 15px;
+}
 </style>

@@ -13,12 +13,12 @@ export default class Point {
       let that = this
       that.handler.setInputAction((event) => {
         let pointInfo = {
-          lat: null,
-          lon: null,
+          latitude: null,
+          longitude: null,
           height: null,
           img: null,
-          type: null,
-          id: null,
+          plottype: null,
+          plotid: null,
           eqid:eqid
         }
         // 1-1 获取点击的位置的坐标信息（经度、纬度、高度）
@@ -30,12 +30,12 @@ export default class Point {
         let lat = Cesium.Math.toDegrees((cartographic.latitude))
         let height = cartographic.height
         // 1-3 点开弹窗中就有经纬度，并且把经纬度图片等信息存入store中
-        pointInfo.lat = lat.toFixed(6)
-        pointInfo.lon = lon.toFixed(6)
+        pointInfo.latitude = lat.toFixed(6)
+        pointInfo.longitude = lon.toFixed(6)
         pointInfo.height = height
         pointInfo.img = img//that.matchIcon(pointType)
-        pointInfo.type = pointType//that.refenceTypeList[pointType]
-        pointInfo.id = that.guid()
+        pointInfo.plottype = pointType//that.refenceTypeList[pointType]
+        pointInfo.plotid = that.guid()
         that.store.setPointInfo1(pointInfo)
         // 1-4 异步执行完成
         resolve('异步操作完成');

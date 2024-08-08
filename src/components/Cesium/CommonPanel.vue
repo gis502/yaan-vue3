@@ -26,7 +26,7 @@
                   </div>
                 </template>
                 <div>
-                  <el-descriptions :column="2" :size="size" border>
+                  <el-descriptions :column="2" size="default " border>
                     <el-descriptions-item>
                       <template #label>
                         <div class="cell-item">
@@ -73,7 +73,7 @@
                     </el-descriptions-item>
                   </el-descriptions>
 
-                  <el-descriptions :column="3" border>
+                  <el-descriptions :column="2" size="default " border>
                     <template v-for="(value,key,index) in activity.info">
                       <el-descriptions-item v-if="value.type ==='text'">
                         <template #label>
@@ -81,8 +81,8 @@
                             {{ value.name }}
                           </div>
                         </template>
-                        <el-text v-if="activity.aditStatus" size="large">{{ value.value }}</el-text>
-                        <el-input v-if="!activity.aditStatus" v-model="value.value" autocomplete="off" size="large"/>
+                          <el-text v-if="activity.aditStatus" size="large" >{{ value.value }}</el-text>
+                          <el-input v-if="!activity.aditStatus" v-model="value.value" autocomplete="off" size="large"/>
                       </el-descriptions-item>
                       <el-descriptions-item v-if="value.type ==='select'">
                         <template #label>
@@ -191,6 +191,7 @@ export default {
         // popupPanelData是空，判断一定时false，造成第一次点击弹窗无法渲染对应标绘的html模板。
         // 可能时因为开启深度监听的原因（deep: true）。
         if (this.visiblePanel) {
+          console.log(this.popupPanelData.plotid,1222)
           this.getPlotInfo(this.popupPanelData.plotid)
         }
       }
@@ -284,6 +285,7 @@ export default {
       addPlotInfo(data).then(res => {
         that.getPlotInfo(that.popupPanelData.plotid)
         that.addStatus = !this.addStatus
+        this.activeNames[0] = []
       })
     },
     // 点击标绘点后获取此标绘点的所有标绘信息
@@ -345,8 +347,11 @@ export default {
 };
 </script>
 <style>
+.el-descriptions__body .el-descriptions__table.is-bordered .el-descriptions__cell{
+  /*width: 43px!important;*/
+}
 .cell-item {
-  /*width: 50px;*/
+  width: 60px;
   text-align: center;
 }
 
@@ -356,12 +361,12 @@ export default {
 }
 
 .el-input {
-  --el-input-width: 100px !important;
+  --el-input-width: 140px !important;
 }
 
 .el-select {
   /* 此版本下的select下拉框跟inline属性有bug，当设置inline时，select的宽度会丢失，因此需要手动设置 */
-  --el-select-width: 100px !important;
+  --el-select-width: 140px !important;
 }
 
 .header-div {
