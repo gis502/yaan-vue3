@@ -37,7 +37,7 @@
             >新增</el-button>
          </el-col>
          <el-col :span="1.5">
-            <el-button 
+            <el-button
                type="info"
                plain
                icon="Sort"
@@ -323,8 +323,8 @@ const { queryParams, form, rules } = toRefs(data);
 
 /** 查询菜单列表 */
 function getList() {
-  loading.value = true;
   listMenu(queryParams.value).then(response => {
+    console.log(response.data);
     menuList.value = proxy.handleTree(response.data, "menuId");
     loading.value = false;
   });

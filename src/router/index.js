@@ -186,5 +186,5 @@ const router = createRouter({
     }
   },
 });
-
+// 打印动态路由
 export default router;

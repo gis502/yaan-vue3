@@ -45,7 +45,6 @@
         @selection-change="handleSelectionChange"
     >
       <el-table-column type="selection" width="50" align="center" :reserve-selection="true"/>
-<!--      <el-table-column prop="id" label="序号" width="50" align="center"/>-->
       <el-table-column
           label="序号"
           width="50"
