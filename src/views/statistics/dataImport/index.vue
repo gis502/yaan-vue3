@@ -190,7 +190,7 @@ import loadingMask from "@/components/LoadingMask/index.vue";
 import WebSocketReconnect from "@/api/websocket";
 import {getToken} from "@/utils/auth";
 import useUserStore from "@/store/modules/user.js";
-import {getField} from "@/api/system/statistics.js";
+import {getField} from "@/api/system/excel.js";
 import {ElMessage} from "element-plus";
 
 
@@ -383,7 +383,7 @@ export default {
       // 获取不带扩展名的文件名
       const fileNameWithoutExtension = file.name.slice(0, -(type.length + 1));
       this.filename=fileNameWithoutExtension
-      this.uploadUrl = `http://localhost:8080/AfterShockStatistics/getAfterShockStatistics/${this.name}&${this.filename}`;
+      this.uploadUrl = `http://localhost:8080/excel/importExcel/${this.name}&${this.filename}`;
       const isExcel = (type === "xlsx") || (type === 'xls');
       if (!isExcel) {
         this.$message({

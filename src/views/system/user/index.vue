@@ -279,7 +279,7 @@
             </el-row>
            <el-row>
              <el-col :span="12">
-               <el-form-item label="导入导出权限">
+               <el-form-item label="导表权限">
                  <el-select v-model="form.fileIds" multiple placeholder="请选择">
                    <el-option
                        v-for="item in excelOptions"
@@ -602,11 +602,9 @@ function cancel() {
 function handleAdd() {
   reset();
   getUser().then(response => {
-    console.log(response)
     postOptions.value = response.posts;
     roleOptions.value = response.roles;
     excelOptions.value = response.fileIds;
-    excelOptions.value.
     open.value = true;
     title.value = "添加用户";
     form.value.password = initPassword.value;
