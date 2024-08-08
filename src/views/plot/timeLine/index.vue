@@ -37,10 +37,11 @@
         <!--      </div>-->
         <!--        图例 end-->
         <!--          面板信息-->
-        <commonPanelTimeLine
+        <TimeLinePanel
             :visible="popupVisible"
             :position="popupPosition"
             :popupData="popupData"
+            :currentTime="currentTime"
         />
       </div>
     </div>
@@ -90,7 +91,7 @@ import {getAllEq, getEqbyId} from '@/api/system/eqlist'
 import cesiumPlot from '@/cesium/plot/cesiumPlot'
 
 import centerstar from "@/assets/images/TimeLine/震中.png";
-import commonPanelTimeLine from "@/components/Cesium/CommonPanelTimeLine.vue";
+import TimeLinePanel from "@/components/Cesium/TimeLinePanel.vue";
 
 //报告产出
 import jsPDF from "jspdf";
@@ -100,7 +101,7 @@ import html2canvas from "html2canvas";
 
 export default {
   components: {
-    commonPanelTimeLine
+    TimeLinePanel
   },
   data: function () {
     return {
@@ -501,12 +502,12 @@ export default {
       this.dragStartX = event.clientX;
       document.addEventListener('mousemove', this.drag);
       document.addEventListener('mouseup', this.stopDrag);
-
       // 添加禁用选择的 CSS 样式
       document.body.style.userSelect = 'none';
       document.body.style.WebkitUserSelect = 'none';
       document.body.style.MozUserSelect = 'none';
       document.body.style.msUserSelect = 'none';
+
     },
     drag(event) {
       if (!this.isDragging) return;
@@ -522,12 +523,12 @@ export default {
       this.isDragging = false;
       document.removeEventListener('mousemove', this.drag);
       document.removeEventListener('mouseup', this.stopDrag);
+      this.updatePlot();
       // 恢复默认的选择行为
       document.body.style.userSelect = 'auto';
       document.body.style.WebkitUserSelect = 'auto';
       document.body.style.MozUserSelect = 'auto';
       document.body.style.msUserSelect = 'auto';
-      this.updatePlot();
     },
     //时间轴end-------------
 
@@ -577,15 +578,7 @@ export default {
             plotname:window.selectedEntity.plottype,
             centerPoint:that.centerPoint
           };
-          // that.popupData = {
-          //   type: window.selectedEntity.properties.type?window.selectedEntity.properties.type.getValue():"",
-          //   time: window.selectedEntity.properties.time?window.selectedEntity.properties.time.getValue():"",
-          //   name: window.selectedEntity.properties.name?window.selectedEntity.properties.name.getValue():"",
-          //   lon: window.selectedEntity.properties.lon?window.selectedEntity.properties.lon.getValue():"",
-          //   lat: window.selectedEntity.properties.lat?window.selectedEntity.properties.lat.getValue():"",
-          //   describe: window.selectedEntity.properties.describe?window.selectedEntity.properties.describe.getValue():"",
-          // };
-          // this.popupData = window.selectedEntity.properties.data ? window.selectedEntity.properties.data.getValue():""
+          // that.currentTime=
           this.popupVisible = true; // 显示弹窗
           this.updatePopupPosition(); // 更新弹窗的位置
         } else {
