@@ -3,25 +3,25 @@
     <div class="dataBox">
       <div class="dataManage" style="height: auto">
         <el-upload
-          name="file"
-          class="upload-demo"
-          :action="uploadUrl"
-          :multiple="false"
-          :show-file-list="false"
-          :on-success="handleSuccess"
-          :before-upload="beforeAvatarUpload"
-          :headers="this.headers">
-          <el-button size='large' type='primary'  style="margin: 10px;" plain icon="Upload">上传Excel文件
+            name="file"
+            class="upload-demo"
+            :action="uploadUrl"
+            :multiple="false"
+            :show-file-list="false"
+            :on-success="handleSuccess"
+            :before-upload="beforeAvatarUpload"
+            :headers="this.headers">
+          <el-button size='large' type='primary' style="margin: 10px;" plain icon="Upload">上传Excel文件
           </el-button>
         </el-upload>
         <el-button size='large' type='primary' style="margin: 10px;"
                    @click="downExcel($event)" plain icon="Download">下载上传Excel文件
         </el-button>
-        <el-button size='large' type='primary' @click="downloadForm"  plain icon="Document">
+        <el-button size='large' type='primary' @click="downloadForm" plain icon="Document">
           下载模板
         </el-button>
 
-        <el-dialog  title="请选择表名"
+        <el-dialog title="请选择表名"
                    v-model="formDialogVisible"
                    width="50%"
                    center>
@@ -37,18 +37,20 @@
               </el-select>
             </el-form-item>
           </el-form>
-          <div  class="dialog-footer"> <el-button @click="formDialogVisible=false">取 消</el-button>
-            <el-button type="primary" @click="downloadFile($event)">确定</el-button></div>
+          <div class="dialog-footer">
+            <el-button @click="formDialogVisible=false">取 消</el-button>
+            <el-button type="primary" @click="downloadFile($event)">确定</el-button>
+          </div>
 
         </el-dialog>
 
         <el-input
-          v-model="inputValue"
-          placeholder="请输入查询内容"
-          clearable
-          @keyup.enter.native="searchDataButton($event)"
-          @click.stopPropagation
-          style="width: 250px; height: auto;margin-right: 10px;margin-left: 10px;"
+            v-model="inputValue"
+            placeholder="请输入查询内容"
+            clearable
+            @keyup.enter.native="searchDataButton($event)"
+            @click.stopPropagation
+            style="width: 250px; height: auto;margin-right: 10px;margin-left: 10px;"
         ></el-input>
         <el-button type="primary" @click="searchDataButton($event)" style="">
           <i class="el-icon-search" style="margin-right: 5px;"></i>搜索
@@ -56,135 +58,135 @@
         <div style="margin-left: 1vw; font-size: 20px">
           <el-select v-model="timeValue" placeholder="今日" style="width: 7vw" @change="getExcelUploadByTimeButton">
             <el-option
-              v-for="item in timeOptions"
-              :key="item.value"
-              :label="item.value"
-              :value="item.value">
+                v-for="item in timeOptions"
+                :key="item.value"
+                :label="item.value"
+                :value="item.value">
             </el-option>
           </el-select>
           添加数据：{{ addCount }}
 
-<!--          更新数据：{{ updateCount }}-->
+          <!--          更新数据：{{ updateCount }}-->
         </div>
       </div>
       <div class="dataContainer">
         <div class="grid-content">
           <el-progress
-            :text-color="progressColor"
-            :percentage='percent'
-            :text-inside='true'
-            :stroke-width='20'
+              :text-color="progressColor"
+              :percentage='percent'
+              :text-inside='true'
+              :stroke-width='20'
           ></el-progress>
         </div>
         <div class="tableStyle">
           <el-table
-            :data="this.tableData"
-            width="100%"
-            height="700"
-            ref="table"
-            fit
-            :disable="true"
-            class="data-table"
-            border
-            element-loading-text="Loading"
-            highlight-current-row
-            stripe
-            :row-style="{ height: '6.7vh' }"
-            :cell-style="{ padding: '0px', borderColor: '#C0C0C0' }"
-            :header-cell-style="{ borderColor: '#C0C0C0', background: 'rgba(252,218,5,0.22)' }"
+              :data="this.tableData"
+              width="100%"
+              height="700"
+              ref="table"
+              fit
+              :disable="true"
+              class="data-table"
+              border
+              element-loading-text="Loading"
+              highlight-current-row
+              stripe
+              :row-style="{ height: '6.7vh' }"
+              :cell-style="{ padding: '0px', borderColor: '#C0C0C0' }"
+              :header-cell-style="{ borderColor: '#C0C0C0', background: 'rgba(252,218,5,0.22)' }"
           >
             <el-table-column
-              align='center'
-              prop='operName'
-              label='用户'
+                align='center'
+                prop='operName'
+                label='用户'
             ></el-table-column>
             <el-table-column
-              align='center'
-              prop='phonenumber'
-              label='联系电话'
+                align='center'
+                prop='phonenumber'
+                label='联系电话'
             ></el-table-column>
             <el-table-column
-              align='center'
-              prop='deptName'
-              label='单位'
+                align='center'
+                prop='deptName'
+                label='单位'
             >
             </el-table-column>
             <el-table-column
-              align='center'
-              prop='operTime'
-              label='更新时间'
+                align='center'
+                prop='operTime'
+                label='更新时间'
             >
             </el-table-column>
             <el-table-column
-              align='center'
-              prop='jsonResult'
-              label='添加数据'
-              :formatter='formatMessageAdd'
+                align='center'
+                prop='jsonResult'
+                label='添加数据'
+                :formatter='formatMessageAdd'
             >
             </el-table-column>
             <el-table-column
-              align='center'
-              prop='jsonResult'
-              label='结果'
-              :formatter='formatMessageUpdate'
+                align='center'
+                prop='jsonResult'
+                label='结果'
+                :formatter='formatMessageUpdate'
             >
             </el-table-column>
-<!--            <el-table-column-->
-<!--              label='操作'-->
-<!--              align='center'-->
-<!--            >-->
-<!--              <template v-slot="scope">-->
-<!--                <el-button-->
-<!--                  size="mini"-->
-<!--                  type="success"-->
-<!--                  @click="getDetail(scope.row.message)"-->
-<!--                >详情-->
-<!--                </el-button-->
-<!--                >-->
-<!--              </template>-->
-<!--            </el-table-column>-->
+            <!--            <el-table-column-->
+            <!--              label='操作'-->
+            <!--              align='center'-->
+            <!--            >-->
+            <!--              <template v-slot="scope">-->
+            <!--                <el-button-->
+            <!--                  size="mini"-->
+            <!--                  type="success"-->
+            <!--                  @click="getDetail(scope.row.message)"-->
+            <!--                >详情-->
+            <!--                </el-button-->
+            <!--                >-->
+            <!--              </template>-->
+            <!--            </el-table-column>-->
           </el-table>
           <div class="paging-block">
             <el-pagination
-              @size-change="handleSizeChange"
-              @current-change="handleCurrentChange"
-              :current-page="currentPage"
-              layout="total, sizes, prev, pager, next, jumper"
-              :total="totalCount"
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="currentPage"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="totalCount"
             ></el-pagination>
           </div>
 
-<!--          <el-dialog-->
-<!--            title="详情"-->
-<!--            :visible.sync="dialogVisible"-->
-<!--            width="50%">-->
-<!--            <el-table-->
-<!--              :data="messageData"-->
-<!--              style="width: 100%"-->
-<!--              height="400"-->
-<!--              ref="table"-->
-<!--            >-->
-<!--              <el-table-column-->
-<!--                prop="id"-->
-<!--                label="编号"-->
-<!--                align='center'>-->
-<!--              </el-table-column>-->
-<!--              <el-table-column-->
-<!--                prop="message"-->
-<!--                label="信息"-->
-<!--                align='center'>-->
-<!--              </el-table-column>-->
-<!--              <el-table-column-->
-<!--                prop="isSuccess"-->
-<!--                align='center'-->
-<!--                label="是否成功">-->
-<!--              </el-table-column>-->
-<!--            </el-table>-->
-<!--            <span slot="footer" class="dialog-footer">-->
-<!--    <el-button @click="dialogVisible = false">取 消</el-button>-->
-<!--    <el-button type="primary" @click="dialogVisible = false">确 定</el-button>-->
-<!--  </span>-->
-<!--          </el-dialog>-->
+          <!--          <el-dialog-->
+          <!--            title="详情"-->
+          <!--            :visible.sync="dialogVisible"-->
+          <!--            width="50%">-->
+          <!--            <el-table-->
+          <!--              :data="messageData"-->
+          <!--              style="width: 100%"-->
+          <!--              height="400"-->
+          <!--              ref="table"-->
+          <!--            >-->
+          <!--              <el-table-column-->
+          <!--                prop="id"-->
+          <!--                label="编号"-->
+          <!--                align='center'>-->
+          <!--              </el-table-column>-->
+          <!--              <el-table-column-->
+          <!--                prop="message"-->
+          <!--                label="信息"-->
+          <!--                align='center'>-->
+          <!--              </el-table-column>-->
+          <!--              <el-table-column-->
+          <!--                prop="isSuccess"-->
+          <!--                align='center'-->
+          <!--                label="是否成功">-->
+          <!--              </el-table-column>-->
+          <!--            </el-table>-->
+          <!--            <span slot="footer" class="dialog-footer">-->
+          <!--    <el-button @click="dialogVisible = false">取 消</el-button>-->
+          <!--    <el-button type="primary" @click="dialogVisible = false">确 定</el-button>-->
+          <!--  </span>-->
+          <!--          </el-dialog>-->
         </div>
       </div>
     </div>
@@ -203,15 +205,15 @@ import {ElMessage} from "element-plus";
 
 export default {
   name: "index",
-  components:{loadingMask,upLoad},
+  components: {loadingMask, upLoad},
   setup() {
     const userStore = useUserStore();
     const name = ref(userStore.name);
     const filename = ref('');
     const uploadUrl = ref(``);
     const websocket = ref(null);
-    const  formDialogVisible =ref(false)
-    return{
+    const formDialogVisible = ref(false)
+    return {
       name,
       uploadUrl,
       filename,
@@ -224,11 +226,11 @@ export default {
       headers: {
         Authorization: "Bearer " + getToken()
       },
-      form:{
+      form: {
         tableName: ''
       },
-      files:[],//导表文件列表
-      tableNameOptions:[],
+      files: [],//导表文件列表
+      tableNameOptions: [],
       timeOptions: [
         {
           value: '今日',
@@ -265,7 +267,7 @@ export default {
     this.getTableName()
     this.getExcelUploadByTimeButton()
   },
-  methods:{
+  methods: {
     searchDataButton(event) {
       event.stopPropagation(); // 阻止事件传播
       this.inputValueParams = this.inputValue.trim()
@@ -281,16 +283,18 @@ export default {
     },
     //添加数据数量
     formatMessageAdd(row, column, cellValue) {
-      console.log(JSON.parse(cellValue))
+
       if (JSON.parse(cellValue).msg === "操作成功") {
-        return JSON.parse(cellValue).data.length;
+        console.log("length:", JSON.parse(cellValue).data.length)
+        const length = JSON.parse(cellValue).data.length;
+        return length;
       } else {
         return 0;
       }
     },
     //更新数据数量
     formatMessageUpdate(row, column, cellValue) {
-      console.log(JSON.parse(cellValue))
+      // console.log("formatMessageUpdate:",JSON.parse(cellValue))
       if (JSON.parse(cellValue).msg === "操作成功") {
         return JSON.parse(cellValue).msg;
       } else {
@@ -303,25 +307,14 @@ export default {
         "time": this.timeValue
       }).then((res) => {
         this.tableData = res.data
-        console.log("请求数据:", this.tableData)
-        // 模拟添加成功和更新成功的计数
-        // let addSuccessCount = 0;
-        // let updateSuccessCount = 0;
-        // const addSuccessPattern = /操作成功/g;
-        // const updateSuccessPattern = /更新成功/g;
-        // if (res.data) {
-        //   res.data.forEach((log) => {
-        //     const matcherAdd = log.message.match(addSuccessPattern);
-        //     console.log(matcherAdd)
-            // const matcherUpdate = log.message.match(updateSuccessPattern);
-            // addSuccessCount += matcherAdd ? matcherAdd.length : 0;
-            // updateSuccessCount += matcherUpdate ? matcherUpdate.length : 0;
-          // });
-        // }
-        // 将计数值保存到 this 对象中
-        // this.addCount = addSuccessCount;
-        // this.updateCount = updateSuccessCount;
-        this.totalCount = res.data.length
+        this.addCount = res.data.reduce((total, log) => {
+          const data = JSON.parse(log.jsonResult);
+          if (data.msg === "操作成功") {
+            return total + data.data.length;
+          }
+          return total;
+        }, 0);
+
       })
     },
     // 下载上传的Excel
@@ -346,29 +339,29 @@ export default {
       }
     },
     //显示表单
-    downloadForm(){
+    downloadForm() {
       this.formDialogVisible = true
     },
     //查询user对应上的表
     getTableName() {
       getField().then(res => {
         console.log(res.data)
-        this.files=res.data
-        if (res.data===null) {
+        this.files = res.data
+        if (res.data === null) {
           ElMessage.error("该用户无导表权限")
         }
         //
-        this.tableNameOptions= this.files.map(file => ({
+        this.tableNameOptions = this.files.map(file => ({
           label: file.fileName,
           value: file.fileName
         }));
-        this.form.tableName=this.tableNameOptions[0].label
+        this.form.tableName = this.tableNameOptions[0].label
       })
     },
     checkFileExists(filePath, callback) {
       const xhr = new XMLHttpRequest();
       xhr.open('HEAD', filePath, true);
-      xhr.onload = function() {
+      xhr.onload = function () {
         if (xhr.status >= 200 && xhr.status < 300) {
           // 文件存在
           callback(true);
@@ -377,13 +370,13 @@ export default {
           callback(false);
         }
       };
-      xhr.onerror = function() {
+      xhr.onerror = function () {
         // 网络错误
         callback(false);
       };
       xhr.send();
     },
-     downloadFile(event) {
+    downloadFile(event) {
       event.stopPropagation(); // 阻止事件传播
 
       // 获取表单提交的值
@@ -422,7 +415,7 @@ export default {
       const type = file.name.split('.')[1]
       // 获取不带扩展名的文件名
       const fileNameWithoutExtension = file.name.slice(0, -(type.length + 1));
-      this.filename=fileNameWithoutExtension
+      this.filename = fileNameWithoutExtension
       this.uploadUrl = `http://localhost:8080/excel/importExcel/${this.name}&${this.filename}`;
       const isExcel = (type === "xlsx") || (type === 'xls');
       if (!isExcel) {
@@ -432,22 +425,21 @@ export default {
         })
       }
       console.log(this.tableNameOptions)
-      if (!validTableNames.includes(fileNameWithoutExtension)){
+      if (!validTableNames.includes(fileNameWithoutExtension)) {
         // 检查文件名是否在允许的表名列表中
-          this.$message({
-            type: 'error',
-            message: '上传文件名称错误，请重新上传！'
-          });
-          return false;
-        }
-      else {
+        this.$message({
+          type: 'error',
+          message: '上传文件名称错误，请重新上传！'
+        });
+        return false;
+      } else {
         this.isLoading = true
         if ('WebSocket' in window) {
           // 判断当前的浏览器是否支持WebSocket
           // 如果支持则创建一个WebSocket赋值给刚才创建的变量
           // 后面的路径实际上就是一次请求，但是这里用的是WebSocket协议
           // 记住这个地方后面详细讲到怎么写
-          this.websocket = new WebSocketReconnect('ws://localhost:8080' + '/WebSocketServerExcel/'+ this.name)
+          this.websocket = new WebSocketReconnect('ws://localhost:8080' + '/WebSocketServerExcel/' + this.name)
         } else {  // 如果不兼容则弹框，该浏览器不支持
           alert('该浏览器不支持')
         }
@@ -465,7 +457,7 @@ export default {
 
     // 上传成功弹窗展示上传结果,需修改
     handleSuccess(res, file, fileList) {
-      const account=res.data.length
+      const account = res.data.length
       // const account = res.data.失败信息.length + res.data.成功信息.length
       // if (res.data.失败信息[0] === "Excel格式错误-表头要求为-信息资产统计综合表") {
       //   this.$message({
@@ -473,22 +465,22 @@ export default {
       //     message: 'Excel格式错误-表头要求为-信息资产统计综合表',
       //   })
       // } else {
-        this.isLoading = false
-        // 获取Excel导入结果信息
-        this.$alert("导入总数：" + account + " 成功数量：" + res.data.length, {
-          dangerouslyUseHTMLString: true,
-          confirmButtonText: '确定',
-          callback: action => {
-            this.getExcelUploadByTimeButton()
-          }
-        });
-        setTimeout(() => {
-          this.percent = 0
-          this.websocket.close()
-        }, 500)
-        // 关闭websocket连接
-      }
-    },
+      this.isLoading = false
+      // 获取Excel导入结果信息
+      this.$alert("导入总数：" + account + " 成功数量：" + res.data.length, {
+        dangerouslyUseHTMLString: true,
+        confirmButtonText: '确定',
+        callback: action => {
+          this.getExcelUploadByTimeButton()
+        }
+      });
+      setTimeout(() => {
+        this.percent = 0
+        this.websocket.close()
+      }, 500)
+      // 关闭websocket连接
+    }
+  },
 
 }
 </script>
@@ -501,13 +493,11 @@ export default {
 }
 
 
-
-
 .contentsBox {
   margin: 10px;
   border-radius: 5px;
   background-color: rgba(255, 255, 255, 0.54);
-  height:100%;
+  height: 100%;
   box-shadow: 0 0 2px rgba(0, 0, 0, 0.91);
 }
 
@@ -531,6 +521,7 @@ export default {
   max-width: 100%;
   border-radius: 5px;
 }
+
 .dialog-footer {
   display: flex;
   justify-content: left;
@@ -538,6 +529,7 @@ export default {
   margin-top: 20px; /* 调整顶部外边距以保持对话框内容的间距 */
   margin-left: 100px;
 }
+
 /*table样式*/
 /*.tableStyle{*/
 /*  min-height: calc(100vh - 196px - 50px);*/
