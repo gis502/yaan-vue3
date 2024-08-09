@@ -42,11 +42,12 @@
       </div>
     </div>
 
+
+
 <!--报告产出按钮-->
 <!--    <div class="button-container">-->
 <!--      <el-button class="el-button&#45;&#45;primary" size="small" @click="takeScreenshot">报告产出</el-button>-->
 <!--    </div>-->
-
   </div>
 </template>
 

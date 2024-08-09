@@ -31,11 +31,6 @@
     <!--    box包裹地图，截图需要-->
     <div id="box" ref="box">
       <div id="cesiumContainer">
-        <!--        图例-->
-        <!--      <div class="legend">-->
-        <!--        <img src="../../assets/images/TimeLine/legend.png" style="width: 23%;height: 23%">-->
-        <!--      </div>-->
-        <!--        图例 end-->
         <!--          面板信息-->
         <commonPanelTimeLine
             :visible="popupVisible"
@@ -76,6 +71,15 @@
     <!--    </div>-->
     <!--报告产出按钮 end-->
 
+      <!--      缩略图-->
+      <div>
+          <mini-map></mini-map>
+      </div>
+
+<!--      新闻-->
+      <div>
+          <news></news>
+      </div>
   </div>
 
 
@@ -96,10 +100,14 @@ import commonPanelTimeLine from "@/components/Cesium/CommonPanelTimeLine.vue";
 import jsPDF from "jspdf";
 import "@/assets/json/TimeLine/SimHei-normal.js";
 import html2canvas from "html2canvas";
+import MiniMap from "@/components/TimeLine/miniMap.vue";
+import News from "@/components/TimeLine/news.vue";
 // import canvas2image from 'canvas2image';
 
 export default {
   components: {
+      News,
+      MiniMap,
     commonPanelTimeLine
   },
   data: function () {
@@ -119,6 +127,7 @@ export default {
       //----------------------------------
       eqid: '',
       viewer:'',
+      smallViewer:null,
       store:'',
       //地震时间年月日
       eqyear:'',
@@ -172,7 +181,6 @@ export default {
     // 生成实体点击事件的handler
     this.entitiesClickPonpHandler()
     this.watchTerrainProviderChanged()
-
   },
   destroyed() {
     // this.websock.close()
@@ -188,11 +196,11 @@ export default {
       // 用于在使用重置导航重置地图视图时设置默认视图控制。接受的值是Cesium.Cartographic 和 Cesium.Rectangle.
       options.defaultResetView = Cesium.Cartographic.fromDegrees(103.00, 29.98, 1500, new Cesium.Cartographic)
       // 用于启用或禁用罗盘。true是启用罗盘，false是禁用罗盘。默认值为true。如果将选项设置为false，则罗盘将不会添加到地图中。
-      options.enableCompass = true
+      options.enableCompass = false
       // 用于启用或禁用缩放控件。true是启用，false是禁用。默认值为true。如果将选项设置为false，则缩放控件将不会添加到地图中。
-      options.enableZoomControls = true
+      options.enableZoomControls = false
       // 用于启用或禁用距离图例。true是启用，false是禁用。默认值为true。如果将选项设置为false，距离图例将不会添加到地图中。
-      options.enableDistanceLegend = true
+      options.enableDistanceLegend = false
       // 用于启用或禁用指南针外环。true是启用，false是禁用。默认值为true。如果将选项设置为false，则该环将可见但无效。
       options.enableCompassOuterRing = true
       options.resetTooltip = "重置视图";
@@ -203,7 +211,58 @@ export default {
       document.getElementsByClassName('cesium-geocoder-input')[0].placeholder = '请输入地名进行搜索'
       document.getElementsByClassName('cesium-baseLayerPicker-sectionTitle')[0].innerHTML = '影像服务'
       document.getElementsByClassName('cesium-baseLayerPicker-sectionTitle')[1].innerHTML = '地形服务'
+
+
+
+        // 创建缩略图视图器实例
+        let that = this
+        let smallMapContainer = document.getElementById('smallMapContainer');
+        that.smallViewer = new Cesium.Viewer(smallMapContainer, {
+            // 隐藏所有控件
+            geocoder: false,
+            homeButton: false,
+            sceneModePicker: false,
+            timeline: false,
+            navigationHelpButton: false,
+            animation: false,
+            infoBox: false,
+            fullscreenButton: false,
+            showRenderState: false,
+            selectionIndicator: false,
+            baseLayerPicker: false,
+            selectedImageryProviderViewModel: viewer.imageryLayers.selectedImageryProviderViewModel,
+            selectedTerrainProviderViewModel: viewer.terrainProviderViewModel
+        });
+        // 隐藏缩略图视图器的版权信息
+        that.smallViewer._cesiumWidget._creditContainer.style.display = 'none';
+
+        // 同步主视图器的相机到缩略图视图器
+        function syncCamera() {
+            const camera1 = viewer.scene.camera;
+            const camera2 = that.smallViewer.scene.camera;
+
+            camera2.setView({
+                destination: camera1.positionWC,
+                orientation: {
+                    heading: camera1.heading,
+                    pitch: camera1.pitch,
+                    roll: camera1.roll
+                }
+            });
+        }
+
+        // 监听主视图器的相机变化
+        viewer.scene.camera.changed.addEventListener(syncCamera);
+
+        // 每帧渲染时同步缩略图视图
+        viewer.scene.postRender.addEventListener(function() {
+            that.smallViewer.scene.requestRender(); // 确保缩略图更新
+        });
+
+        // 初始同步
+        syncCamera();
     },
+
     // 获取地震列表、以及最新地震的eqid、并渲染已有的标绘
     getEq() {
       // console.log(this.eqid)
@@ -331,6 +390,32 @@ export default {
         id:this.centerPoint.plotid,
         plottype:"震中",
       });
+        let that = this
+        that.smallViewer.entities.removeAll();
+        that.smallViewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(
+                parseFloat(this.centerPoint.longitude),
+                parseFloat(this.centerPoint.latitude),
+                parseFloat(this.centerPoint.height || 0)
+            ),
+            billboard: {
+                image: centerstar,
+                width: 30,
+                height: 30,
+            },
+            label: {
+                text: this.centerPoint.position,
+                show: true,
+                font: '10px sans-serif',
+                fillColor:Cesium.Color.RED,        //字体颜色
+                style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                outlineWidth: 2,
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                pixelOffset: new Cesium.Cartesian2(0, -16),
+            },
+            id:this.centerPoint.plotid,
+            plottype:"震中",
+        });
 
       //获取渲染点
       this.getPlotwithStartandEndTime(this.eqid)
@@ -924,6 +1009,4 @@ export default {
 .timelabel{
   color: #ffffff;
 }
-
-
 </style>
