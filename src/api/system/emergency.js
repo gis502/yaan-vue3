@@ -1,10 +1,10 @@
 import request from '@/utils/request'
-import { parseStrEmpty } from "@/utils/ruoyi";
 
-export function getDisasterReserves(query) {
+export function getEmergency(query) {
     return request({
         url: '/system/emergency/getEmergency',
         method: 'get',
         params: query
     })
 }
+

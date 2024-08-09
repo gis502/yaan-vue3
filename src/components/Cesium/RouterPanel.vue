@@ -1,54 +1,102 @@
 <template>
   <div class="videoMonitorWin" v-if="visiblePanel" :style="styleObject">
-    <div class="ponpTitle">信息面板</div>
+    <div class="ponpTitle">{{ this.popupTitle }}</div>
     <div class="ponpTable">
       <div class="info-item" v-for="(value, key) in popupPanelData" :key="key">
-        <div class="info-label">{{ keyToChinese(key) }}</div>
+        <div class="info-label">{{ keyToChinese(key)  }}</div>
         <div class="info-value">{{ value }}</div>
+<!--        <div class="info-label">{{ this.popupData.propertyNames  }}</div>-->
       </div>
     </div>
-<!--    -->
-<!--    <el-button @click="deletePoint" type="danger" icon="el-icon-delete" circle></el-button>-->
+    <!-- 取消注释按钮以启用删除功能 -->
+    <!-- <el-button @click="deletePoint" type="danger" icon="el-icon-delete" circle></el-button> -->
   </div>
 </template>
 
 <script>
+
+import { toRaw } from 'vue'
+
 export default {
   data() {
     return {
       visiblePanel: null,
       positionEntity: { x: 0, y: 0 },
       popupPanelData: {},
+      popupTitle: '',
       keyMappings: {
-        county: '县（区）',
-        storagePointsCount: '储备库点数量（个）',
-        totalKitsCount: '合计总件套数',
-        disasterTentsCount: '救灾帐篷（顶）',
-        cottonBlanketsCount: '棉被（床）',
-        otherBlanketsCount: '其他被子（床）',
-        cottonClothesCount: '棉衣裤（套）',
-        cottonCoatsCount: '棉大衣（件）',
-        otherClothesCount: '其他衣物（套、件）',
-        woolBlanketsCount: '毛毯（床）',
-        foldingBedsCount: '折叠床（张）',
-        bunkBedsCount: '高低床（套）',
-        stripedClothBundlesCount: '彩条布（包）',
-        moistureMatsCount: '防潮垫（张）',
-        generatorsCount: '发电机（台）',
-        lightingFixturesCount: '照明灯具（个）',
-        lightingKitsCount: '照明灯组（套）',
-        flashlightsCount: '手电筒（支）',
-        raincoatsCount: '雨衣（件）',
-        rainBootsCount: '雨靴（双）',
-        otherSuppliesCount: '其他装备数量（个）',
-        address: '地址',
-        lon: '经度',
-        lat: '纬度',
-        contactPerson: '联系人',
-        contactPhone: '联系电话',
-        insertTime: '插入时间',
-        // id: 'ID', // 如果需要显示ID，可以取消注释
-      }
+          county: '县（区）',
+          storagePointsCount: '储备库点数量（个）',
+          totalKitsCount: '合计总件套数',
+          disasterTentsCount: '救灾帐篷（顶）',
+          cottonBlanketsCount: '棉被（床）',
+          otherBlanketsCount: '其他被子（床）',
+          cottonClothesCount: '棉衣裤（套）',
+          cottonCoatsCount: '棉大衣（件）',
+          otherClothesCount: '其他衣物（套、件）',
+          woolBlanketsCount: '毛毯（床）',
+          foldingBedsCount: '折叠床（张）',
+          bunkBedsCount: '高低床（套）',
+          stripedClothBundlesCount: '彩条布（包）',
+          moistureMatsCount: '防潮垫（张）',
+          generatorsCount: '发电机（台）',
+          lightingFixturesCount: '照明灯具（个）',
+          lightingKitsCount: '照明灯组（套）',
+          flashlightsCount: '手电筒（支）',
+          raincoatsCount: '雨衣（件）',
+          rainBootsCount: '雨靴（双）',
+          otherSuppliesCount: '其他装备数量（个）',
+          address: '地址',
+          lon: '经度',
+          lat: '纬度',
+          contactPerson: '联系人',
+          contactPhone: '联系电话',
+          insertTime: '插入时间',
+          totalItems: '合计总件套数',
+          infraredDetectors: '红外探测仪',
+          opticalDetectors: '光学探测仪(蛇眼)',
+          hydraulicSpreaders: '液压扩张钳',
+          hydraulicCutters: '液压剪切钳',
+          rockDrills: '凿岩机',
+          crowbars: '撬棍（把）',
+          rebarCutters: '钢筋速断器',
+          hydraulicJacks: '手动液压千斤顶',
+          lightSticks: '发光棒',
+          fuelLiters: '油料（升）',
+          tensileRopeMeters: '抗拉索',
+          rescueRopesMeters: '救援绳（米）',
+          ropeThrowers: '抛绳器',
+          foldingLadders: '折叠梯（个）',
+          shovelsPicksHooksForksHammers: '锹/镐/钩/叉/锤',
+          foldingShovels: '折叠铲（把）',
+          whistles: '口哨（个）',
+          helmets: '头盔（顶）',
+          rainBoots: '雨鞋（双）',
+          gloves: '手套（双）',
+          lifelinesMeters: '救生缆索（米）',
+          drainagePumps: '排水泵（台）',
+          fireBlowers: '风力灭火机（个）',
+          ironShovels: '铁锹（把）',
+          lifeJackets: '救生衣（件）',
+          lifeRings: '救生圈（个）',
+          warningTapesMeters: '警示带（米）',
+          walkieTalkies: '对讲机（台）',
+          megaphones: '扩音器（个）',
+          gongs: '锣（个）',
+          headlamps: '头灯（个）',
+          portableLights: '手提照明灯（个）',
+          medicalKits: '医疗急救箱',
+          excavators: '挖掘机',
+          loaders: '装载机（推土机）',
+          waterPumps: '抽水泵',
+          relayPumps: '接力水泵',
+          mobileWaterBags: '移动水囊（个）',
+          backpackFireSprayers: '背负式喷水灭火抢',
+          chainsaws: '油锯（个）',
+          hosesMeters: '水带（米）',
+          fireTrucks: '消防水车',
+          otherSupplies: '其他',
+      },
     }
   },
   props: ['popupData', 'position', 'visible'],
@@ -59,7 +107,23 @@ export default {
     popupData: {
       deep: true,
       handler() {
-        this.popupPanelData = this.popupData;
+        // 转换 popupData,避免嵌套Proxy
+        const rawPopupData = toRaw(this.popupData);
+        console.log(rawPopupData, 'data----');
+        // 获取 popupTitle表头
+        this.popupTitle = rawPopupData.tableName;
+        console.log(this.popupTitle, 'title----');
+
+        // 将 key 转换为中文
+        const translatedData = {};
+        for (const key in rawPopupData) {
+          if (rawPopupData.hasOwnProperty(key) && key !== 'tableName' && key !== 'id') {
+            const translatedKey = this.keyMappings[key] || key;
+            translatedData[translatedKey] = rawPopupData[key];
+          }
+        }
+        this.popupPanelData = translatedData;
+
       }
     },
     position() {
@@ -74,7 +138,7 @@ export default {
         left: `${this.positionEntity.x}px`,
         top: `${this.positionEntity.y}px`
       };
-    }
+    },
   },
   methods: {
     keyToChinese(key) {
@@ -89,15 +153,15 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 .videoMonitorWin {
   position: absolute;
   height: 50vh;
-  width: 650px;
+  width: 700px;
   padding: 20px;
   z-index: 10;
   background-color: rgba(40, 40, 40, 0.7);
-  border: 2px solid #18c9dc;
+  /*border: 2px solid #18c9dc;*/
   overflow-y: auto;
 }
 
@@ -111,11 +175,11 @@ export default {
 .ponpTable {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
   color: white;
 }
 
 .info-item {
+  font-size: 15px;
   text-align: center;
   align-items:center;
   flex: 1 1 calc(50% - 10px); /* 两列布局，减去gap的宽度 */
@@ -144,4 +208,3 @@ el-button {
   margin: 20px auto 0;
 }
 </style>
-
