@@ -31,3 +31,10 @@ export function getData(data) {
         data
     })
 }
+export function getExcelUploadByTime(params) {
+    return request({
+        url: '/excel/getExcelUploadByTime',
+        method: 'post',
+        params
+    })
+}

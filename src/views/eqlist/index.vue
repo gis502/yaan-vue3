@@ -116,6 +116,7 @@ export default {
     getEq() {
       let that = this
       getAllEq().then(res => {
+        console.log("请求数据:", res)
         that.getEqData = res
         that.total = res.length
         let data = []
@@ -125,6 +126,7 @@ export default {
           data.push(item)
         }
         that.tableData = data
+        console.log("请求数据:", that.tableData)
       })
     },
     // 删除单条地震
@@ -220,6 +222,7 @@ export default {
       hh = hh > 9 ? hh : '0' + hh
       mm = mm > 9 ? mm : '0' + mm
       ss = ss > 9 ? ss : '0' + ss
+      console.log(year, month, day, hh, mm, ss)
       // return `${year}年${month}月${day}日${hh}时${mm}分${ss}秒`
       return `${year}-${month}-${day} ${hh}:${mm}:${ss}`
     },

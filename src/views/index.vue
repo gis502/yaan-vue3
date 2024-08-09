@@ -69,9 +69,9 @@ export default {
     }
   },
   mounted(){
-    setInterval(() => {
-      this.nowTime = this.nowTime()
-    }, 500);
+    // setInterval(() => {
+    //   this.nowTime = this.nowTime()
+    // }, 500);
     this.getEq()
 
   },
@@ -82,8 +82,34 @@ export default {
     getEq() {
       let that = this
       getAllEq().then(res => {
-        that.tableData = res
+        that.total = res.length
+        let data = []
+        for(let i=0;i<res.length;i++){
+          let item = res[i]
+          item.time = that.timestampToTime(item.time)
+          data.push(item)
+        }
+        that.tableData = data
+
       })
+    },
+    timestampToTime(timestamp) {
+      let DateObj = new Date(timestamp)
+      // 将时间转换为 XX年XX月XX日XX时XX分XX秒格式
+      let year = DateObj.getFullYear()
+      let month = DateObj.getMonth() + 1
+      let day = DateObj.getDate()
+      let hh = DateObj.getHours()
+      let mm = DateObj.getMinutes()
+      let ss = DateObj.getSeconds()
+      month = month > 9 ? month : '0' + month
+      day = day > 9 ? day : '0' + day
+      hh = hh > 9 ? hh : '0' + hh
+      mm = mm > 9 ? mm : '0' + mm
+      ss = ss > 9 ? ss : '0' + ss
+      console.log(year, month, day, hh, mm, ss)
+      // return `${year}年${month}月${day}日${hh}时${mm}分${ss}秒`
+      return `${year}-${month}-${day} ${hh}:${mm}:${ss}`
     },
     // go() {
     //   let route = this.$router.resolve({path: '/thd'}).href
