@@ -225,16 +225,16 @@ export default {
             new Date(activity.starttime) <= currentTime
         );
       });
-      console.log("filter",activities)
+      // console.log("filter",activities)
       // 对活动数据进行排序,时间从早到晚
       activities.sort((a, b) => {
         if (a.starttime < b.starttime) return -1;
         if (a.starttime > b.starttime) return 1;
         return 0;
       });
-      console.log("sort",activities)
+      // console.log("sort",activities)
       // 返回当前时间点前的最后一条信息
-      console.log(activities,activities[activities.length-1])
+      // console.log(activities,activities[activities.length-1])
       this.activity=activities[activities.length-1]
     },
     // 时间戳转换成日期格式，将时间戳转换成 xx年xx月xx日xx时xx分xx秒格式，

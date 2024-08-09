@@ -2,24 +2,30 @@
   <div class="app-container">
     <el-table :data="tableData"
               @row-click="go"
+              :stripe="true"
+              :cell-style="tableColor"
     >
-      <el-table-column prop="position" label="位置" width="300"></el-table-column>
-      <el-table-column prop="time" label="发震时间"></el-table-column>
-      <el-table-column prop="magnitude" label="震级"></el-table-column>
-      <el-table-column prop="longitude" label="经度"></el-table-column>
-      <el-table-column prop="latitude" label="纬度"></el-table-column>
-      <el-table-column prop="depth" label="深度"></el-table-column>
+      <el-table-column prop="position" label="位置" width="300" header-align="center" align="left"></el-table-column>
+      <el-table-column prop="time" label="发震时间" header-align="center" align="center"></el-table-column>
+      <el-table-column prop="magnitude" label="震级" header-align="center" align="center"></el-table-column>
+      <el-table-column prop="longitude" label="经度" header-align="center" align="center"></el-table-column>
+      <el-table-column prop="latitude" label="纬度" header-align="center" align="center"></el-table-column>
+      <el-table-column prop="depth" label="深度" header-align="center" align="center"></el-table-column>
     </el-table>
 
-    <el-pagination
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        :current-page="currentPage"
-        :page-sizes="pageSizes"
-        :page-size="pageSize"
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="total">
-    </el-pagination>
+
+      <el-pagination
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :current-page="currentPage"
+          :page-sizes="pageSizes"
+          :page-size="pageSize"
+          style="display: flex; justify-content: center; margin-top: 20px;"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+      >
+      </el-pagination>
+
 
   </div>
 </template>
@@ -47,7 +53,8 @@ export default {
         longitude: '',
         latitude: '',
         depth: '',
-        eqid: ''
+        eqid: '',
+        // istimeLine:'',
       },
     }
   },
@@ -60,7 +67,7 @@ export default {
       getAllEq().then(res => {
         let data = []
         // console.log(res)
-        for(let i=0;i<res.length;i++){
+        for (let i = 0; i < res.length; i++) {
           let item = res[i]
           item.time = that.timestampToTime(res[i].time)
           data.push(item)
@@ -115,14 +122,32 @@ export default {
       // console.log(`当前页: ${val}`);
     },
 
-    go(row, column, cell, event){
-      this.$router.push({ name: 'thdTimeLine', params:{ eqid: row.eqid }})
-    }
-
+    go(row, column, cell, event) {
+      this.$router.push({name: 'thdTimeLine', params: {eqid: row.eqid}})
+    },
+    // 修改table header的背景色
+    tableColor({row, column, rowIndex, columnIndex}) {
+      // console.log(row.magnitude)
+      if (row.magnitude > 5) {
+        // console.log('>')
+        return {
+          // 'background-color': 'rgb(65,159,255)',
+          'background-color': 'rgba(65,159,255,0.19)',
+          'border-color': '#f8f8f9',
+        }
+      }
+      else{
+        return {
+          'background-color': 'rgb(255,255,255)',
+          'border-color': '#f8f8f9',
+        }
+      }
+    },
   }
 }
 </script>
 
 <style scoped>
+
 
 </style>

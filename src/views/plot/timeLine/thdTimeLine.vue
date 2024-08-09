@@ -6,28 +6,6 @@
     </div>
     <!--    title end-->
 
-    <!--    地震列表-->
-<!--    <el-form class="eqTable">-->
-<!--      <el-table :data="tableData" style="width: 100%;margin-bottom: 5px" :stripe="true"-->
-<!--                :header-cell-style="tableHeaderColor" :cell-style="tableColor" @row-click="plotAdj">-->
-<!--        <el-table-column prop="position" label="位置"></el-table-column>-->
-<!--        <el-table-column prop="time" label="发震时间" width="100"></el-table-column>-->
-<!--        <el-table-column prop="magnitude" label="震级" width="50"></el-table-column>-->
-<!--        <el-table-column prop="longitude" label="经度" width="65"></el-table-column>-->
-<!--        <el-table-column prop="latitude" label="纬度" width="65"></el-table-column>-->
-<!--        <el-table-column prop="depth" label="深度" width="50"></el-table-column>-->
-<!--      </el-table>-->
-<!--      <el-pagination-->
-<!--          @size-change="handleSizeChange"-->
-<!--          @current-change="handleCurrentChange"-->
-<!--          :current-page="currentPage"-->
-<!--          :page-size="pageSize"-->
-<!--          layout="total, prev, pager, next, jumper"-->
-<!--          :total="total">-->
-<!--      </el-pagination>-->
-<!--    </el-form>-->
-    <!--地震列表 end-->
-
     <!--    box包裹地图，截图需要-->
     <div id="box" ref="box">
       <div id="cesiumContainer">
@@ -50,9 +28,9 @@
     <div class="bottom">
       <!--      播放暂停按钮-->
       <div class="play">
-        <img class="play-icon" src="../../../assets/images/TimeLine/播放.png" v-if="!isTimerRunning"
+        <img class="play-icon" src="../../../assets/icons/TimeLine/播放.png" v-if="!isTimerRunning"
              @click="toggleTimer"/>
-        <img class="pause-icon" src="../../../assets/images/TimeLine/暂停.png" v-if="isTimerRunning"
+        <img class="pause-icon" src="../../../assets/icons/TimeLine/暂停.png" v-if="isTimerRunning"
              @click="toggleTimer"/>
       </div>
 
@@ -73,11 +51,49 @@
     </div>
     <!-- 进度条 end-->
 
+<!--    两侧组件-->
+
+<!--新闻-->
+<!--    <timeLineNewsCard class="news" width="35rem">-->
+<!--      <div>-->
+<!--        <h2 class="sub-title">-->
+<!--          最新事件:-->
+<!--&lt;!&ndash;          <span class="m-time">{{ speakers.time }}</span>&ndash;&gt;-->
+<!--        </h2>-->
+<!--      </div>-->
+<!--    </timeLineNewsCard>-->
+<!--新闻 end-->
+
+
+
+
+      <timeLineEmergencyResponse
+          :currentTime="currentTime"
+      />
+
+      <timeLinePersonnelCasualties
+          :currentTime="currentTime"
+      />
+
+
+    <div class="rescue_team">
+      <timeLineRescueTeam/>
+    </div>
+
+    <div class="news">
+      <timeLineNews/>
+    </div>
+
+    <div class="smallmap">
+      <timeLineSmallMap/>
+    </div>
+<!--    两侧组件 end-->
     <!--报告产出按钮-->
-    <!--    <div class="button-container">-->
-    <!--      <el-button class="el-button&#45;&#45;primary" size="small" @click="takeScreenshot">报告产出</el-button>-->
-    <!--    </div>-->
+    <div class="button-container">
+      <el-button class="el-button--primary" size="small" @click="takeScreenshot">报告产出</el-button>
+    </div>
     <!--报告产出按钮 end-->
+
 
   </div>
 
@@ -92,18 +108,25 @@ import {getPlotwithStartandEndTime} from '@/api/system/plot'
 import {getAllEq, getEqbyId} from '@/api/system/eqlist'
 import cesiumPlot from '@/cesium/plot/cesiumPlot'
 
-import centerstar from "@/assets/images/TimeLine/震中.png";
+import centerstar from "@/assets/icons/TimeLine/震中.png";
 import TimeLinePanel from "@/components/Cesium/TimeLinePanel.vue";
+
+import timeLineNews from "@/components/TimeLine/timeLineNews.vue"
+import timeLineEmergencyResponse from "@/components/TimeLine/timeLineEmergencyResponse.vue"
+import timeLinePersonnelCasualties from "@/components/TimeLine/timeLinePersonnelCasualties.vue"
 
 //报告产出
 import jsPDF from "jspdf";
-import "@/assets/json/TimeLine/SimHei-normal.js";
+import "../../../api/SimHei-normal.js";
 import html2canvas from "html2canvas";
 // import canvas2image from 'canvas2image';
 
 export default {
   components: {
-    TimeLinePanel
+    TimeLinePanel,
+    timeLineNews,
+    timeLineEmergencyResponse,
+    timeLinePersonnelCasualties
   },
   data: function () {
     return {
@@ -170,29 +193,28 @@ export default {
     this.eqid = this.$route.params.eqid
   },
   mounted() {
-    this.init()
-    // 获取地震列表，取列表第一个地震渲染
-    // this.getEq()
+    // this.init()
     this.getEqInfo(this.eqid)
+    this.initTimerLine()
     // ---------------------------------------------------
     // 生成实体点击事件的handler
-    this.entitiesClickPonpHandler()
-    this.watchTerrainProviderChanged()
+    // this.entitiesClickPonpHandler()
+    // this.watchTerrainProviderChanged()
 
   },
-  destroyed() {
-    // this.websock.close()
-  },
+  // destroyed() {
+  //   // this.websock.close()
+  // },
   methods: {
     // 初始化控件等
     init() {
-      // console.log(this.eqid)
+      console.log(this.eqid)
       let viewer = initCesium(Cesium)
       viewer._cesiumWidget._creditContainer.style.display = 'none' // 隐藏版权信息
       window.viewer = viewer
       let options = {}
       // 用于在使用重置导航重置地图视图时设置默认视图控制。接受的值是Cesium.Cartographic 和 Cesium.Rectangle.
-      options.defaultResetView = Cesium.Cartographic.fromDegrees(103.00, 29.98, 1500, new Cesium.Cartographic)
+      // options.defaultResetView = Cesium.Cartographic.fromDegrees(103.00, 29.98, 1000, new Cesium.Cartographic)
       // 用于启用或禁用罗盘。true是启用罗盘，false是禁用罗盘。默认值为true。如果将选项设置为false，则罗盘将不会添加到地图中。
       options.enableCompass = true
       // 用于启用或禁用缩放控件。true是启用，false是禁用。默认值为true。如果将选项设置为false，则缩放控件将不会添加到地图中。
@@ -228,7 +250,7 @@ export default {
         this.eqendTime = new Date(this.eqstartTime.getTime() + (7 * 24 * 60 * 60 * 1000));
         this.currentTime = this.eqstartTime
 
-        this.updateMapandVariablebeforInit()
+        // this.updateMapandVariablebeforInit()
 
       })
     },
@@ -284,32 +306,32 @@ export default {
       return `${year}-${month}-${day} ${hh}:${mm}:${ss}`
     },
     // 切换地震，获取震中信息，切换地震地图视角
-    plotAdj(row) {
-      this.stopTimer();
-      this.isTimerRunning = false
-      this.currentTimePosition = 0
-      this.currentNodeIndex = 0
-
-      window.viewer.entities.removeAll();
-      this.eqid = row.eqid
-      getEqbyId({eqid: this.eqid}).then(res => {
-        this.centerPoint = res
-        this.centerPoint.plotid = "center"
-        this.centerPoint.starttime = new Date(res.time)
-        this.centerPoint.endtime = new Date(res.time + (7 * 24 * 60 * 60 * 1000 + 1000));
-
-        //变量初始化
-        this.eqstartTime = this.centerPoint.starttime
-        this.eqyear = this.eqstartTime.getFullYear()
-        this.eqmonth = this.eqstartTime.getMonth() + 1
-        this.eqday = this.eqstartTime.getDate()
-        // 计算结束时间 结束时间为开始后72小时，单位为毫秒
-        this.eqendTime = new Date(this.eqstartTime.getTime() + (7 * 24 * 60 * 60 * 1000));
-        this.currentTime = this.eqstartTime
-
-        this.updateMapandVariablebeforInit()
-      })
-    },
+    // plotAdj(row) {
+    //   this.stopTimer();
+    //   this.isTimerRunning = false
+    //   this.currentTimePosition = 0
+    //   this.currentNodeIndex = 0
+    //
+    //   window.viewer.entities.removeAll();
+    //   this.eqid = row.eqid
+    //   getEqbyId({eqid: this.eqid}).then(res => {
+    //     this.centerPoint = res
+    //     this.centerPoint.plotid = "center"
+    //     this.centerPoint.starttime = new Date(res.time)
+    //     this.centerPoint.endtime = new Date(res.time + (7 * 24 * 60 * 60 * 1000 + 1000));
+    //
+    //     //变量初始化
+    //     this.eqstartTime = this.centerPoint.starttime
+    //     this.eqyear = this.eqstartTime.getFullYear()
+    //     this.eqmonth = this.eqstartTime.getMonth() + 1
+    //     this.eqday = this.eqstartTime.getDate()
+    //     // 计算结束时间 结束时间为开始后72小时，单位为毫秒
+    //     this.eqendTime = new Date(this.eqstartTime.getTime() + (7 * 24 * 60 * 60 * 1000));
+    //     this.currentTime = this.eqstartTime
+    //
+    //     this.updateMapandVariablebeforInit()
+    //   })
+    // },
 
     //更新地图中心视角，更新变量：地震起止时间，渲染点
     updateMapandVariablebeforInit() {
@@ -439,8 +461,9 @@ export default {
         this.isTimerRunning = false
       } else {
         this.currentTimePosition = this.currentTimePosition % 100
+        // this.currentTime = new Date(this.eqstartTime.getTime() + (7 * 24 * 60 * 60 * 1000));
         this.currentTime = new Date(this.eqstartTime.getTime() + this.currentNodeIndex * 15 * 60 * 1000);
-        this.updatePlot()
+        // this.updatePlot()
       }
     },
     updatePlot() {
@@ -472,8 +495,8 @@ export default {
             ),
             billboard: {
               image: item.img,
-              width: 50,
-              height: 50,
+              width: 30,
+              height: 30,
             },
             // label: {
             //   text: item.pointname,
@@ -862,24 +885,15 @@ export default {
   overflow: hidden;
 }
 
-.button-container {
-  z-index: 99;
-  position: absolute;
-  top: 50%;
-  left: 0%;
-  width: 6%;
-}
 
 .bottom {
   height: 6%;
-  width: 100%;
-  left: 0%;
-  bottom: 9%;
+  width: 60%;
+  left: 12%;
+  bottom: 14%;
   position: absolute;
-  /*防止组件图层被覆盖无法点击*/
   z-index: 99;
 }
-
 .time-ruler {
   position: relative;
   width: 90%;
@@ -951,7 +965,58 @@ export default {
 }
 
 .timelabel {
-  color: #ffffff;
+  //color: #ffffff;
+  color: #000000;
+}
+
+
+
+
+.rescue_team{
+  position: absolute;
+  top: 0%;
+  width: 100%;  /* 调整宽度 */
+  height: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  left: 0%;
+  z-index: 10; /* 提高层级 */
+  background-color: rgba(40, 40, 40, 0.4);
+}
+
+.news {
+  position: absolute;
+  top: 6%;
+  width: 21%;
+  height: 40%;
+  padding: 10px;
+  border-radius: 5px;
+  right: 1%;
+  z-index: 20;
+  background-color: rgba(40, 40, 40, 0.7);
+}
+
+.smallmap {
+  position: absolute;
+  top: 55%;
+  width: 21%;
+  height: 40%;
+  padding: 10px;
+  border-radius: 5px;
+  right: 1%;
+  z-index: 20;
+  background-color: rgba(40, 40, 40, 0.7);
+}
+
+
+
+
+.button-container {
+  position: absolute;
+  z-index: 20;
+  bottom: 10%;
+  left: 1%;
+
 }
 
 
