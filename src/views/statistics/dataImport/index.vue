@@ -304,7 +304,8 @@ export default {
     //随时间变化查询,用于日志查询
     getExcelUploadByTimeButton() {
       getExcelUploadByTime({
-        "time": this.timeValue
+        "time": this.timeValue,
+        "requestParams":this.inputValueParams
       }).then((res) => {
         this.tableData = res.data
         this.addCount = res.data.reduce((total, log) => {

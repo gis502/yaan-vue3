@@ -186,15 +186,15 @@ const getTableField = () => {
   getField().then(res => {
     files.value = res.data
     if (files.value.length == 0) {
-      ElMessage.error("改用户无导表权限")
+      ElMessage.error("该用户无导表权限")
     }
 
     options.value = files.value.map(file => ({
       label: file.fileName,
-      value: file.fileId
+      value: file.fileFlag
     }));
 
-    flag.value = files.value[0].fileId; // 默认选择第一个表
+    flag.value = files.value[0].fileFlag; // 默认选择第一个表
     const fileColumn = JSON.parse(files.value[0].fileColumn);
     const map = new Map(Object.entries(fileColumn));
     field.value = Array.from(map.keys())
