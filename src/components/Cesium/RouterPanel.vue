@@ -4,8 +4,11 @@
     <div class="ponpTable">
       <div class="info-item" v-for="(value, key) in popupPanelData" :key="key">
         <div class="info-label">{{ keyToChinese(key)  }}</div>
-        <div class="info-value">{{ value }}</div>
-<!--        <div class="info-label">{{ this.popupData.propertyNames  }}</div>-->
+        <div class="info-value">
+          <!-- 如果键是插入时间，则格式化显示 -->
+          <span v-if="key === keyMappings.insertTime">{{ formatInsertTime(value) }}</span>
+          <span v-else>{{ value }}</span>
+        </div>
       </div>
     </div>
     <!-- 取消注释按钮以启用删除功能 -->
@@ -16,6 +19,7 @@
 <script>
 
 import { toRaw } from 'vue'
+import dayjs from 'dayjs'; // 引入dayjs库进行时间格式化
 
 export default {
   data() {
@@ -143,6 +147,10 @@ export default {
   methods: {
     keyToChinese(key) {
       return this.keyMappings[key] || key;
+    },
+    formatInsertTime(value) {
+      // 使用dayjs库进行时间格式转换
+      return dayjs(value).format('YYYY-MM-DD HH:mm:ss');
     },
     // 删除标注
     deletePoint() {
